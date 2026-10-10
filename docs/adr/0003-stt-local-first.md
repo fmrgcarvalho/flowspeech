@@ -1,19 +1,25 @@
-# ADR-0003 — STT local ativo; cloud apenas como adaptador
+# ADR-0003 — Motor de transcrição: Parakeet TDT 0.6B v3, local
 
 **Estado:** aceite · **Data:** 2026-10-10
 
 ## Contexto
-O Wispr Flow transcreve na cloud. O objetivo do FlowPT é correr localmente (privacidade, custo zero,
-funcionar offline), mas queremos poder comparar qualidade e latência com serviços cloud.
+O FlowSpeech tem de transcrever localmente (privacidade, custo zero, offline), com qualidade em
+português europeu e inglês e latência baixa em CPU comum. Sem dependência de LLMs externos.
+
+## Opções
+| Motor | Línguas | Qualidade PT | Velocidade CPU | Licença |
+|---|---|---|---|---|
+| **Parakeet TDT 0.6B v3** (sherpa-onnx, int8) | 25 europeias, deteção automática | Treinado com PT-PT; WER 4,8% no FLEURS | Muito rápida | CC-BY-4.0 |
+| Whisper large-v3-turbo (whisper.cpp) | 99+ | Boa, tendência para PT-BR | Média | MIT |
+| Modelos só-inglês (Canary-Qwen, Distil-Whisper, Parakeet 1.1B) | EN | — | — | — |
 
 ## Decisão
-- Implementar `ISpeechToText` em dois adaptadores: `WhisperLocalSpeechToText` e `CloudSpeechToText`
-  (API compatível com OpenAI — serve OpenAI, Groq, Azure e servidores locais como faster-whisper-server).
-- Por omissão `"Engine": "local"`. A chave cloud só é lida de variável de ambiente, nunca do ficheiro.
-- Modelo por omissão: `ggml-large-v3-turbo-q5_0` (bom equilíbrio qualidade/velocidade em PT-PT).
-- MVP com texto "cru" + regras determinísticas; pós-processamento com LLM entra como formatador
-  opcional (`OllamaFormatter`), também local.
+- `ISpeechToText` com três adaptadores: `ParakeetSpeechToText` (omissão), `WhisperLocalSpeechToText`
+  (alternativa para línguas fora das 25) e `CloudSpeechToText` (API compatível OpenAI, desligado).
+- A chave cloud só é lida de variável de ambiente, nunca do ficheiro.
+- Pós-processamento apenas por regras determinísticas (sem LLM).
 
 ## Consequências
-- Primeira utilização requer descarregar ~550 MB.
-- Latência depende do hardware; em CPU fraca recomenda-se o modelo `small`.
+- Primeira utilização requer descarregar ~0,7 GB.
+- O Parakeet não aceita *prompt* de vocabulário: nomes próprios corrigem-se com o dicionário pessoal.
+- Atribuição CC-BY-4.0 ao modelo NVIDIA no README.

@@ -16,18 +16,18 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore FlowPT.sln
+        run: dotnet restore FlowSpeech.sln
 
       - name: Build
-        run: dotnet build FlowPT.sln -c Release --no-restore
+        run: dotnet build FlowSpeech.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test tests/FlowPT.Core.Tests -c Release --no-build --logger "console;verbosity=normal"
+        run: dotnet test tests/FlowSpeech.Core.Tests -c Release --no-build --logger "console;verbosity=normal"
 
       - name: Publish app
-        run: dotnet publish src/FlowPT.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish
+        run: dotnet publish src/FlowSpeech.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish
 
       - uses: actions/upload-artifact@v4
         with:
-          name: FlowPT-win-x64
+          name: FlowSpeech-win-x64
           path: publish

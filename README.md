@@ -1,6 +1,6 @@
-# FlowPT
+# FlowSpeech
 
-Ditado por voz para Windows, **100% local** — um clone do [Wispr Flow](https://wisprflow.ai) que corre no teu PC.
+Ditado por voz para Windows, **100% local e gratuito**.
 Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em qualquer aplicação
 (Outlook, Teams, Slack, VS Code, browser…). Nenhum áudio sai da máquina.
 
@@ -15,27 +15,38 @@ Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em 
 O que acontece por baixo:
 
 ```
- Tecla global ──► Microfone (16 kHz) ──► Whisper local ──► Limpeza ──► LLM local* ──► Ctrl+V na app ativa
- (hook WH_KEYBOARD_LL)   (NAudio)       (whisper.cpp)   (regras)    (Ollama)       (clipboard reposto)
-                                                                     * opcional, desligado no MVP
+ Tecla global ──► Microfone 16 kHz ──► Parakeet TDT 0.6B v3 ──► Limpeza por regras ──► Ctrl+V na app ativa
+ (hook de teclado)    (NAudio)          (sherpa-onnx, local)    (hesitações, dicionário,   (clipboard reposto)
+                                                                  snippets, pontuação)
 ```
 
-## Funcionalidades do Wispr Flow e o estado no FlowPT
+## Motor de transcrição
 
-| Wispr Flow | FlowPT | Notas |
+Por omissão o FlowSpeech usa o **NVIDIA Parakeet TDT 0.6B v3** (licença CC-BY-4.0), executado localmente
+com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
+
+- 25 línguas europeias, incluindo **português (treinado com português europeu)** e inglês
+- deteção automática da língua — podes alternar PT/EN sem mudar nada
+- pontuação e maiúsculas já vêm do modelo
+- muito rápido em CPU (versão int8), sem precisar de GPU
+
+O **Whisper large-v3-turbo** (whisper.cpp) continua disponível como alternativa — útil para línguas fora
+das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI, desligado por omissão.
+
+## Funcionalidades
+
+| Funcionalidade | Estado | Notas |
 |---|---|---|
 | Ditado em qualquer app com atalho global | ✅ | Push-to-talk + mãos-livres |
-| Transcrição rápida e precisa, multilingue | ✅ | Whisper large-v3-turbo local; deteção automática PT/EN |
+| Transcrição local rápida, PT-PT e EN | ✅ | Parakeet v3; Whisper como alternativa |
 | Remove "hum", "ãh" e hesitações | ✅ | Regras locais |
-| Pontuação e maiúsculas automáticas | ✅ | Whisper + regras; "vírgula", "ponto final", "nova linha" ditados |
-| Dicionário pessoal (nomes, termos técnicos) | ✅ | Substituições + *prompt* que enviesa o Whisper |
+| Pontuação e maiúsculas automáticas | ✅ | Modelo + regras; "vírgula", "ponto final", "nova linha" ditados |
+| Dicionário pessoal (nomes, termos técnicos) | ✅ | Substituições aplicadas ao texto final |
 | Snippets ("o meu email" → endereço) | ✅ | `Snippets` em `settings.json` |
-| Tom adaptado à app (formal no Outlook, casual no Slack) | 🟡 | Deteção da app feita; reescrita de tom exige ativar o LLM |
-| Auto-correção ("às 3, não, às 4" → "às 4") | 🟡 | Via LLM local (Ollama), desligado por omissão |
+| Estilo por aplicação (ex.: código sem ponto final) | 🟡 | Deteção da app feita; regras de estilo básicas |
 | Histórico das ditações | ✅ | `history.jsonl` local |
-| Command Mode (selecionar texto e dizer "torna isto mais formal") | ⏳ | Roadmap |
-| Whisper mode (falar baixinho) | ⏳ | Roadmap — ganho automático + VAD |
-| Aprender correções do utilizador automaticamente | ⏳ | Roadmap |
+| Modo de comandos sobre texto selecionado | ⏳ | Roadmap |
+| Falar baixinho (ganho automático + VAD) | ⏳ | Roadmap |
 
 Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 
@@ -44,7 +55,6 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 - Windows 10/11 x64
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (para compilar)
 - ~1 GB livre para o modelo; 8 GB RAM recomendados
-- Opcional: GPU NVIDIA (ver *Aceleração GPU*) e [Ollama](https://ollama.com) para o pós-processamento com LLM
 
 ## Arranque rápido
 
@@ -52,70 +62,62 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 git clone https://github.com/fmrgcarvalho/flowspeech.git
 cd flowspeech
 
-# 1. Descarregar o modelo Whisper (~550 MB, uma vez)
+# 1. Descarregar o modelo Parakeet (~0,7 GB, uma vez)
 ./scripts/download-model.ps1
 
 # 2. Correr
-dotnet run --project src/FlowPT.App
+dotnet run --project src/FlowSpeech.App
 ```
 
 Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl** premido e fala.
 
 ## Configuração
 
-`%AppData%\FlowPT\settings.json` (criado no 1.º arranque; menu do ícone → *Abrir definições* / *Recarregar definições*):
+`%AppData%\FlowSpeech\settings.json` (criado no 1.º arranque; menu do ícone → *Abrir definições* / *Recarregar definições*):
 
 ```jsonc
 {
   "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300 },  // 163 = Right Ctrl
   "Transcription": {
-    "Engine": "local",                         // "local" | "cloud"
-    "Language": "auto",                        // ou "pt", "en"
-    "ModelPath": "ggml-large-v3-turbo-q5_0.bin"
+    "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
+    "ParakeetModelDir": "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+    "WhisperModelPath": "ggml-large-v3-turbo-q5_0.bin",
+    "Language": "auto"                         // só Whisper/cloud; o Parakeet deteta sozinho
   },
-  "Formatting": { "RuleBasedCleanup": true, "UseLlm": false, "OllamaModel": "qwen2.5:7b-instruct" },
-  "Dictionary": { "flow pt": "FlowPT", "gaiao": "Gaião" },
+  "Formatting": { "RuleBasedCleanup": true },
+  "Dictionary": { "flow speech": "FlowSpeech", "gaiao": "Gaião" },
   "Snippets":   { "o meu email": "mgaiao25@gmail.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
   "Injection": "Paste"                         // "Type" para apps que bloqueiam colar
 }
 ```
 
-### Ativar o LLM local (opcional)
-
-```powershell
-winget install Ollama.Ollama
-ollama pull qwen2.5:7b-instruct
-```
-
-Depois, em `settings.json`: `"UseLlm": true`. Se o Ollama estiver em baixo ou demorar mais do que
-`LlmTimeoutSeconds`, o FlowPT escreve o texto sem LLM — a ditação nunca bloqueia.
-
-### Aceleração GPU
-
-Em `src/FlowPT.Transcription/FlowPT.Transcription.csproj` adicionar `Whisper.net.Runtime.Cuda`
-(NVIDIA) ou `Whisper.net.Runtime.Vulkan`. O Whisper.net escolhe automaticamente o melhor runtime disponível.
+Para usar o Whisper: `./scripts/download-model.ps1 -Engine whisper` e `"Engine": "whisper"`.
 
 ## Estrutura
 
 ```
-flowpt/
+flowspeech/
 ├── src/
-│   ├── FlowPT.Core/               # Domínio puro (net8.0): abstrações, pipeline, regras de texto, definições
-│   ├── FlowPT.Transcription/      # Adaptadores STT: Whisper local (ativo) e API cloud (opcional)
-│   ├── FlowPT.Formatting/         # Pós-processamento com LLM local (Ollama)
-│   ├── FlowPT.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
-│   └── FlowPT.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
-├── tests/FlowPT.Core.Tests/       # Testes unitários do domínio (xUnit)
+│   ├── FlowSpeech.Core/               # Domínio puro (net8.0): abstrações, pipeline, regras de texto, definições
+│   ├── FlowSpeech.Transcription/      # Motores: Parakeet (omissão), Whisper, API cloud
+│   ├── FlowSpeech.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
+│   └── FlowSpeech.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
+├── tests/FlowSpeech.Core.Tests/       # Testes unitários do domínio (xUnit)
 ├── scripts/download-model.ps1
-├── docs/                          # Arquitetura, roadmap e ADRs
-└── .github/workflows/build.yml    # CI em windows-latest: build, testes e publish
+├── docs/                              # Arquitetura, roadmap e ADRs
+└── .github/workflows/build.yml        # CI em windows-latest: build, testes e publish
 ```
 
 Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Limitações conhecidas
 
-- Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o FlowPT também corra elevado.
-- Primeira ditação após o arranque pode demorar 1–3 s enquanto o modelo carrega.
-- Em CPU, o modelo `turbo` transcreve ~5 s de fala em ~1–2 s num portátil moderno; usar `small` em máquinas fracas.
+- Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o FlowSpeech também corra elevado.
+- A primeira ditação após o arranque pode demorar 1–2 s enquanto o modelo carrega.
+- O Parakeet não aceita vocabulário prévio; nomes próprios corrigem-se com o dicionário pessoal.
+
+## Licenças de terceiros
+
+- Parakeet TDT 0.6B v3 — NVIDIA, CC-BY-4.0
+- sherpa-onnx — Apache 2.0 · whisper.cpp / Whisper.net — MIT · NAudio — MIT
