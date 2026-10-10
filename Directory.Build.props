@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- Permite compilar os projetos Windows também em Linux/macOS (CI, devcontainers). -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Company>Miguel Gaião</Company>
+    <Product>FlowPT</Product>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>

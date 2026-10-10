@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>FlowPT.App</RootNamespace>
+    <AssemblyName>FlowPT</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <!-- Só para o NotifyIcon (ícone na barra de tarefas). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\flowpt.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Evita ambiguidades WPF vs WinForms (Application, MessageBox, ...). -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FlowPT.Core\FlowPT.Core.csproj" />
+    <ProjectReference Include="..\FlowPT.Platform.Windows\FlowPT.Platform.Windows.csproj" />
+    <ProjectReference Include="..\FlowPT.Transcription\FlowPT.Transcription.csproj" />
+    <ProjectReference Include="..\FlowPT.Formatting\FlowPT.Formatting.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\flowpt.ico" />
+    <None Update="Assets\flowpt.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
