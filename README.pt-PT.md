@@ -40,6 +40,17 @@ A **limpeza com IA** e a **tradução para inglês** ligam-se e desligam-se no m
 (botão direito). A tecla muda-se em `Hotkey.VirtualKey` nas definições: `163` = Ctrl direito (omissão),
 `145` = Scroll Lock, `165` = Alt direito (evitar em teclado português — é o AltGr do @ e do €).
 
+## Para acertar mais
+
+- **Escolhe o microfone certo** — menu do ícone → **Microfone**. Os auscultadores Bluetooth demoram
+  cerca de 1 s a começar a enviar áudio (perde-se a primeira palavra) e usam áudio de chamada, de baixa
+  qualidade; o microfone do portátil ou um headset com fio/USB acerta muito mais. Por omissão o
+  SpeechDesk usa o microfone por omissão do Windows.
+- **Dita frases completas** (4 s ou mais). Frases muito curtas dão pouco contexto ao modelo.
+- Começa a falar quando aparecer a barra. O SpeechDesk continua a gravar 250 ms depois de soltares a
+  tecla (`Hotkey.ReleaseTailMs`), para não cortar a última sílaba.
+- Microfones com volume baixo são amplificados automaticamente antes do reconhecimento.
+
 ## Como funciona
 
 O que acontece por baixo:
@@ -62,6 +73,8 @@ com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 
 O **Whisper large-v3-turbo** (whisper.cpp) continua disponível como alternativa — útil para línguas fora
 das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI, desligado por omissão.
+O Whisper é muito mais pesado em CPU: num portátil de 4 núcleos (Intel i5-1135G7) demorou ~30 s por
+frase, contra ~0,5 s do Parakeet — só é prático em computadores de secretária rápidos.
 
 ## Falar em português, escrever em inglês (opcional)
 
@@ -114,7 +127,8 @@ Para melhor qualidade em máquinas com mais RAM, qualquer modelo GGUF em formato
 | Estilo por aplicação (formal, casual, código) | ✅ | Regras básicas; tom completo com a IA ligada |
 | Histórico das ditações | ✅ | `history.jsonl` local |
 | Modo de comandos sobre texto selecionado | ⏳ | Roadmap |
-| Falar baixinho (ganho automático + VAD) | ⏳ | Roadmap |
+| Escolha do microfone | ✅ | Menu do ícone → Microfone |
+| Microfones com volume baixo (ganho automático) | ✅ | Deteção de voz (VAD) no roadmap |
 
 Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 
@@ -154,7 +168,7 @@ O `scripts/download-model.ps1` descarrega os modelos pela linha de comandos (`-E
 ```jsonc
 {
   "UiLanguage": "en",                          // "en" | "pt"
-  "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300 },  // 163 = Right Ctrl
+  "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300, "ReleaseTailMs": 250 },  // 163 = Right Ctrl
   "Transcription": {
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
     "ParakeetModelDir": "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
@@ -169,6 +183,7 @@ O `scripts/download-model.ps1` descarrega os modelos pela linha de comandos (`-E
   "Dictionary": { "speech desk": "SpeechDesk", "dot net": ".NET" },
   "Snippets":   { "o meu email": "nome@exemplo.pt" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
+  "Microphone": "",                            // nome (ou parte); "" = microfone por omissão do Windows
   "Injection": "Paste"                         // "Type" para apps que bloqueiam colar
 }
 ```
@@ -199,6 +214,9 @@ Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o SpeechDesk também corra elevado.
 - A primeira ditação após o arranque pode demorar 1–2 s enquanto o modelo carrega.
 - O Parakeet não aceita vocabulário prévio; nomes próprios corrigem-se com o dicionário pessoal.
+- O Parakeet deteta a língua sozinho e não pode ser forçado a português: frases muito curtas saem às
+  vezes em inglês.
+- Os microfones de auscultadores Bluetooth perdem o início de cada ditado; escolhe outro microfone no menu do ícone.
 
 ## Licenças de terceiros
 

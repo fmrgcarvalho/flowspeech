@@ -40,6 +40,17 @@ The app is in **English by default**; switch to Portuguese from the tray menu �
 the clock (right-click). Change the key with `Hotkey.VirtualKey` in the settings: `163` = Right Ctrl
 (default), `145` = Scroll Lock, `165` = Right Alt (avoid on keyboards where it is AltGr).
 
+## Getting the best accuracy
+
+- **Pick the right microphone** — tray menu → **Microphone**. Bluetooth headsets take about 1 s to
+  start sending audio (the first word gets lost) and use low-quality call audio; the laptop's built-in
+  microphone or a wired/USB headset is much more accurate. By default SpeechDesk uses the Windows
+  default microphone.
+- **Speak in full sentences** (4 s or more). Very short phrases give the model little context.
+- Start speaking when the overlay appears. SpeechDesk keeps recording for 250 ms after you let go of
+  the key (`Hotkey.ReleaseTailMs`), so the last syllable is not cut off.
+- Quiet microphones are boosted automatically before recognition.
+
 ## How it works
 
 ```
@@ -60,6 +71,8 @@ By default SpeechDesk uses **NVIDIA Parakeet TDT 0.6B v3** (CC-BY-4.0), running 
 
 **OpenAI Whisper large-v3-turbo** (whisper.cpp) is available as an alternative — useful for languages
 outside those 25 — and there is an adapter for OpenAI-compatible cloud APIs, off by default.
+Whisper is much heavier on CPU: on a 4-core laptop (Intel i5-1135G7) it took ~30 s per sentence versus
+~0.5 s for Parakeet, so it is only practical on fast desktops.
 
 ## Speak Portuguese, type English (optional)
 
@@ -114,7 +127,8 @@ For better quality on machines with more RAM, any ChatML-format GGUF model works
 | Per-app style (formal, casual, code) | ✅ | Basic rules; full tone with AI on |
 | Dictation history | ✅ | Local `history.jsonl` |
 | Voice commands on selected text | ⏳ | Roadmap |
-| Quiet speech (auto gain + VAD) | ⏳ | Roadmap |
+| Microphone choice | ✅ | Tray menu → Microphone |
+| Quiet microphones (auto gain) | ✅ | Voice activity detection (VAD) on the roadmap |
 
 Details in [docs/ROADMAP.md](docs/ROADMAP.md) (in Portuguese).
 
@@ -154,7 +168,7 @@ An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
 ```jsonc
 {
   "UiLanguage": "en",                          // "en" | "pt"
-  "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300 },  // 163 = Right Ctrl
+  "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300, "ReleaseTailMs": 250 },  // 163 = Right Ctrl
   "Transcription": {
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
     "ParakeetModelDir": "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
@@ -169,6 +183,7 @@ An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
   "Dictionary": { "speech desk": "SpeechDesk", "dot net": ".NET" },
   "Snippets":   { "my email": "name@example.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
+  "Microphone": "",                            // name (or part of it); "" = Windows default
   "Injection": "Paste"                         // "Type" for apps that block pasting
 }
 ```
@@ -199,6 +214,9 @@ Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (in Portuguese).
 - It cannot type into apps running **as Administrator** (Windows UIPI restriction) unless SpeechDesk also runs elevated.
 - The first dictation after start-up can take 1–2 s while the model loads.
 - Parakeet does not accept a custom vocabulary; fix proper names with the personal dictionary.
+- Parakeet detects the language by itself and cannot be forced to Portuguese: very short phrases are
+  sometimes transcribed in English.
+- Bluetooth headset microphones lose the start of each dictation; choose another microphone in the tray menu.
 
 ## Third-party licences
 
