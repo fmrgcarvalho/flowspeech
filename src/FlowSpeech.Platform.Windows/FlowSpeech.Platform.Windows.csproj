@@ -11,4 +11,9 @@
   <ItemGroup>
     <PackageReference Include="NAudio.WinMM" Version="2.2.1" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Os projetos WPF não importam System.IO nem System.Net.Http por omissão. -->
+    <Using Include="System.IO" />
+    <Using Include="System.Net.Http" />
+  </ItemGroup>
 </Project>

@@ -27,4 +27,9 @@
     <Resource Include="Assets\flowspeech.ico" />
     <None Update="Assets\flowspeech.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Os projetos WPF não importam System.IO nem System.Net.Http por omissão. -->
+    <Using Include="System.IO" />
+    <Using Include="System.Net.Http" />
+  </ItemGroup>
 </Project>
