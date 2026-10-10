@@ -21,7 +21,7 @@ public sealed class FlowSettings
     /// <summary>Snippets: dizer o gatilho expande para o texto.</summary>
     public Dictionary<string, string> Snippets { get; set; } = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["o meu email"] = "mgaiao25@gmail.com"
+        ["o meu email"] = "nome@exemplo.pt"
     };
 
     /// <summary>Estilo de escrita por processo (sem .exe).</summary>

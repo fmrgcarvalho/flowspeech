@@ -48,7 +48,7 @@ public class RuleBasedFormatterTests
     public void Expands_snippets()
     {
         var result = Create().Format("envia para o meu email por favor", WritingStyle.Raw);
-        Assert.Equal("Envia para mgaiao25@gmail.com por favor", result);
+        Assert.Equal("Envia para nome@exemplo.pt por favor", result);
     }
 
     [Theory]

@@ -1,16 +1,32 @@
 # FlowSpeech
 
+[![build](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml/badge.svg)](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml)
+
 Ditado por voz para Windows, **100% local e gratuito**.
 Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em qualquer aplicação
 (Outlook, Teams, Slack, VS Code, browser…). Nenhum áudio sai da máquina.
 
-## Como funciona
+**Página do projeto, com demonstração interativa:** https://fmrgcarvalho.github.io/flowspeech/
 
-| Ação | Resultado |
+> **Estado: em desenvolvimento (v0.1).** Ainda não há instalador — compila-se a partir do código.
+> O núcleo tem testes automáticos; a parte Windows e os motores de IA estão implementados e a ser
+> validados em máquinas reais. Problemas e sugestões: [Issues](https://github.com/fmrgcarvalho/flowspeech/issues).
+
+## Atalhos
+
+| Atalho | O que faz |
 |---|---|
-| Manter **Right Ctrl** premido e falar | Grava enquanto a tecla está premida; ao largar, escreve o texto |
-| **Dois toques** em Right Ctrl | Modo mãos-livres; mais um toque termina |
-| **Esc**, ou Right Ctrl + outra tecla | Cancela a gravação |
+| Manter **Ctrl direito** premido | Grava enquanto a tecla está premida; ao largar, escreve o texto |
+| **Dois toques** no Ctrl direito | Modo mãos-livres: grava sem segurar a tecla |
+| **Um toque** no Ctrl direito (em mãos-livres) | Pára e escreve o texto |
+| **Esc** | Cancela a gravação |
+| Ctrl direito **+ outra tecla** (ex.: Ctrl+C) | Cancela — é um atalho normal |
+
+A **limpeza com IA** e a **tradução para inglês** ligam-se e desligam-se no menu do ícone junto ao relógio
+(botão direito). A tecla muda-se em `Hotkey.VirtualKey` nas definições: `163` = Ctrl direito (omissão),
+`145` = Scroll Lock, `165` = Alt direito (evitar em teclado português — é o AltGr do @ e do €).
+
+## Como funciona
 
 O que acontece por baixo:
 
@@ -92,7 +108,14 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 
 - Windows 10/11 x64
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (para compilar)
-- ~1 GB livre para o modelo de transcrição (+1 GB se usares a limpeza com IA); 8 GB RAM recomendados
+- Disco: ~0,7 GB para o modelo de transcrição (+1 GB para a limpeza com IA / tradução)
+
+| Configuração | RAM usada pelo FlowSpeech (estimativa) | RAM do PC recomendada |
+|---|---|---|
+| Só transcrição (Parakeet ou Whisper) | ~1–1,2 GB | 8 GB (funciona com 4 GB) |
+| Transcrição + limpeza com IA ou tradução | ~2,3–2,6 GB | 8 GB (mínimo ~6 GB) |
+
+O modelo de IA só é carregado quando ligas a limpeza com IA ou a tradução.
 
 ## Arranque rápido
 
@@ -128,7 +151,7 @@ Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl
   },
   "Translation": { "Enabled": false, "TargetLanguage": "English", "TimeoutSeconds": 12 },
   "Dictionary": { "flow speech": "FlowSpeech", "gaiao": "Gaião" },
-  "Snippets":   { "o meu email": "mgaiao25@gmail.com" },
+  "Snippets":   { "o meu email": "nome@exemplo.pt" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
   "Injection": "Paste"                         // "Type" para apps que bloqueiam colar
 }
@@ -148,7 +171,7 @@ flowspeech/
 │   └── FlowSpeech.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
 ├── tests/FlowSpeech.Core.Tests/       # Testes unitários do domínio (xUnit)
 ├── scripts/download-model.ps1
-├── docs/                              # Arquitetura, roadmap e ADRs
+├── docs/                              # Página do projeto (GitHub Pages), arquitetura, roadmap e ADRs
 └── .github/workflows/build.yml        # CI em windows-latest: build, testes e publish
 ```
 
