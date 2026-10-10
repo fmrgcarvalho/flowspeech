@@ -3,6 +3,7 @@ using System.IO;
 using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using SpeechDesk.Core.Settings;
+using SpeechDesk.Platform.Windows;
 using Forms = System.Windows.Forms;
 
 namespace SpeechDesk.App;
@@ -17,6 +18,8 @@ public sealed record TrayActions(
     Action<bool> SetTranslationEnabled,
     Func<string> Language,
     Action<string> SetLanguage,
+    Func<string> Microphone,
+    Action<string> SetMicrophone,
     Action DownloadModels);
 
 /// <summary>Notification-area icon and its menu. All texts come from <see cref="L"/>.</summary>
@@ -30,6 +33,7 @@ public sealed class TrayIcon : IDisposable
     private readonly Forms.ToolStripMenuItem _language = new();
     private readonly Forms.ToolStripMenuItem _english = new("English");
     private readonly Forms.ToolStripMenuItem _portuguese = new("Português");
+    private readonly Forms.ToolStripMenuItem _microphone = new();
     private readonly Forms.ToolStripMenuItem _downloadModels = new();
     private readonly Forms.ToolStripMenuItem _openSettings = new();
     private readonly Forms.ToolStripMenuItem _reloadSettings = new();
@@ -53,6 +57,8 @@ public sealed class TrayIcon : IDisposable
         _english.Click += (_, _) => _actions.SetLanguage(L.English);
         _portuguese.Click += (_, _) => _actions.SetLanguage(L.Portuguese);
         _language.DropDownItems.AddRange([_english, _portuguese]);
+        _microphone.DropDownItems.Add(new Forms.ToolStripMenuItem()); // a seta do submenu só aparece com itens
+        _microphone.DropDownOpening += (_, _) => FillMicrophones();
         _downloadModels.Click += (_, _) => _actions.DownloadModels();
         _openSettings.Click += (_, _) => Open(SettingsStore.SettingsPath);
         _reloadSettings.Click += (_, _) => _actions.ReloadSettings();
@@ -72,6 +78,7 @@ public sealed class TrayIcon : IDisposable
             _aiToggle,
             _translateToggle,
             _language,
+            _microphone,
             new Forms.ToolStripSeparator(),
             _openSettings,
             _reloadSettings,
@@ -100,6 +107,7 @@ public sealed class TrayIcon : IDisposable
         _aiToggle.Text = L.T("tray.aiToggle");
         _translateToggle.Text = L.T("tray.translateToggle");
         _language.Text = L.T("tray.language");
+        _microphone.Text = L.T("tray.microphone");
         _downloadModels.Text = L.T("tray.downloadModel");
         _openSettings.Text = L.T("tray.openSettings");
         _reloadSettings.Text = L.T("tray.reloadSettings");
@@ -111,6 +119,28 @@ public sealed class TrayIcon : IDisposable
         _aiToggle.Checked = _actions.AiEnabled();
         _translateToggle.Checked = _actions.TranslationEnabled();
         SetState(_state);
+    }
+
+    /// <summary>Lista os microfones ao abrir o submenu: apanha auscultadores ligados entretanto.</summary>
+    private void FillMicrophones()
+    {
+        var current = _actions.Microphone();
+        var items = new List<Forms.ToolStripItem>();
+
+        var windowsDefault = new Forms.ToolStripMenuItem(L.T("tray.microphoneDefault")) { Checked = string.IsNullOrWhiteSpace(current) };
+        windowsDefault.Click += (_, _) => _actions.SetMicrophone("");
+        items.Add(windowsDefault);
+        items.Add(new Forms.ToolStripSeparator());
+
+        foreach (var name in NAudioRecorder.ListDevices())
+        {
+            var item = new Forms.ToolStripMenuItem(name) { Checked = string.Equals(name, current, StringComparison.OrdinalIgnoreCase) };
+            item.Click += (_, _) => _actions.SetMicrophone(name);
+            items.Add(item);
+        }
+
+        _microphone.DropDownItems.Clear();
+        _microphone.DropDownItems.AddRange(items.ToArray());
     }
 
     public void SetState(DictationState state)

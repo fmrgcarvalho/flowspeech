@@ -16,8 +16,14 @@ public class RuleBasedFormatterTests
     [Theory]
     [InlineData("hum, olá a todos", "Olá a todos")]
     [InlineData("então ãh vamos começar", "Então vamos começar")]
-    [InlineData("um so I was thinking", "So I was thinking")]
+    [InlineData("umm so I was thinking", "So I was thinking")]
     public void Removes_fillers(string input, string expected) =>
+        Assert.Equal(expected, Create().Format(input, WritingStyle.Raw));
+
+    [Theory]
+    [InlineData("Este é um exemplo de teste.", "Este é um exemplo de teste.")]
+    [InlineData("um café, por favor", "Um café, por favor")]
+    public void Keeps_portuguese_article_um(string input, string expected) =>
         Assert.Equal(expected, Create().Format(input, WritingStyle.Raw));
 
     [Theory]

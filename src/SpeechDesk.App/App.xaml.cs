@@ -70,7 +70,7 @@ public partial class App : Application
         _disposables.Add(_ai);
         var formatters = new List<ITextFormatter> { _ai, new RuleBasedFormatter(settings) };
 
-        var recorder = new NAudioRecorder();
+        var recorder = new NAudioRecorder(() => _settings.Microphone);
         var hotkey = new LowLevelHotkeyListener(() => _settings.Hotkey.VirtualKey, () => _settings.Hotkey.DoubleTapMs);
         _disposables.AddRange([recorder, hotkey]);
 
@@ -95,6 +95,8 @@ public partial class App : Application
             SetTranslationEnabled: enabled => _ = SetTranslationEnabledAsync(enabled),
             Language: () => L.Language,
             SetLanguage: SetLanguage,
+            Microphone: () => _settings.Microphone,
+            SetMicrophone: SetMicrophone,
             DownloadModels: () => _ = EnsureModelsAsync(askFirst: false)));
         _controller = new DictationController(pipeline, hotkey, _overlay, _tray);
 
@@ -226,6 +228,13 @@ public partial class App : Application
         SettingsStore.Save(_settings);
         _tray?.ApplyLanguage();
         _tray?.ShowInfo(L.T("app.languageChanged"));
+    }
+
+    private void SetMicrophone(string name)
+    {
+        _settings.Microphone = name;
+        SettingsStore.Save(_settings);
+        _tray?.ShowInfo(L.T("app.microphoneChanged", string.IsNullOrWhiteSpace(name) ? L.T("tray.microphoneDefault") : name));
     }
 
     private void ReloadSettings()

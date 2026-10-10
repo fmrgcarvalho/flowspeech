@@ -1,5 +1,8 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
 using SpeechDesk.Core.Abstractions;
+using SpeechDesk.Core.Audio;
 using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using SherpaOnnx;
@@ -38,7 +41,7 @@ public sealed class ParakeetSpeechToText : ISpeechToText, IDisposable
         {
             ct.ThrowIfCancellationRequested();
             var sw = Stopwatch.StartNew();
-            var samples = ToFloat(clip.Pcm16);
+            var samples = AudioPreprocessor.Prepare(clip.Pcm16, clip.SampleRate);
 
             string text;
             lock (_decodeLock)
@@ -60,7 +63,7 @@ public sealed class ParakeetSpeechToText : ISpeechToText, IDisposable
             var path = Path.Combine(_modelDir, name);
             if (!System.IO.File.Exists(path))
                 throw new FileNotFoundException(L.T("model.missing.parakeet", path), path);
-            return path;
+            return NativePath(path);
         }
 
         var config = new OfflineRecognizerConfig();
@@ -78,13 +81,24 @@ public sealed class ParakeetSpeechToText : ISpeechToText, IDisposable
         return new OfflineRecognizer(config);
     }
 
-    internal static float[] ToFloat(byte[] pcm16)
+    /// <summary>
+    /// O sherpa-onnx abre os ficheiros com a code page ANSI do Windows: um caminho com acentos
+    /// (ex.: C:\Users\Fábio\...) não é encontrado. Usa-se o nome curto 8.3, que é só ASCII.
+    /// </summary>
+    private static string NativePath(string path)
     {
-        var samples = new float[pcm16.Length / 2];
-        for (var i = 0; i < samples.Length; i++)
-            samples[i] = (short)(pcm16[2 * i] | (pcm16[2 * i + 1] << 8)) / 32768f;
-        return samples;
+        if (path.All(char.IsAscii) || !OperatingSystem.IsWindows()) return path;
+
+        var buffer = new StringBuilder(1024);
+        var length = GetShortPathName(path, buffer, buffer.Capacity);
+        var shortPath = length > 0 && length < buffer.Capacity ? buffer.ToString() : path;
+        if (!shortPath.All(char.IsAscii))
+            throw new IOException(L.T("model.nonAsciiPath", path));
+        return shortPath;
     }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int GetShortPathName(string longPath, StringBuilder shortPath, int bufferSize);
 
     public void Dispose()
     {

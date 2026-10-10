@@ -42,6 +42,12 @@ public sealed class AppSettings
         ["WindowsTerminal"] = WritingStyle.Code
     };
 
+    /// <summary>
+    /// Microfone (nome ou parte do nome, como aparece no menu). Vazio = o microfone por omissão do Windows.
+    /// Os auscultadores Bluetooth demoram ~1 s a começar a enviar áudio: o microfone do portátil acerta mais.
+    /// </summary>
+    public string Microphone { get; set; } = "";
+
     public InjectionMode Injection { get; set; } = InjectionMode.Paste;
     public bool SaveHistory { get; set; } = true;
 
@@ -57,6 +63,8 @@ public sealed class HotkeySettings
     public int DoubleTapMs { get; set; } = 350;
     /// <summary>Gravações mais curtas que isto são descartadas (toques acidentais).</summary>
     public int MinRecordingMs { get; set; } = 300;
+    /// <summary>Continua a gravar um pouco depois de soltar a tecla, para não cortar a última sílaba.</summary>
+    public int ReleaseTailMs { get; set; } = 250;
 }
 
 public sealed class TranscriptionSettings

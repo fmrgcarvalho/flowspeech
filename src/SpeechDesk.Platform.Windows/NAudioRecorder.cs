@@ -10,12 +10,15 @@ public sealed class NAudioRecorder : IAudioRecorder
 {
     private const int SampleRate = 16000;
     private readonly object _sync = new();
-    private readonly int _deviceNumber;
+    /// <summary>WAVE_MAPPER: o microfone por omissão do Windows.</summary>
+    private const int DefaultDevice = -1;
+    private readonly Func<string> _microphone;
     private WaveInEvent? _waveIn;
     private MemoryStream _buffer = new();
     private ManualResetEventSlim? _stopped;
 
-    public NAudioRecorder(int deviceNumber = 0) => _deviceNumber = deviceNumber;
+    /// <param name="microphone">Nome (ou parte) do microfone a usar; vazio = por omissão do Windows.</param>
+    public NAudioRecorder(Func<string> microphone) => _microphone = microphone;
 
     public event EventHandler<float>? LevelChanged;
 
@@ -25,6 +28,21 @@ public sealed class NAudioRecorder : IAudioRecorder
         Enumerable.Range(0, WaveInEvent.DeviceCount)
             .Select(i => WaveInEvent.GetCapabilities(i).ProductName)
             .ToList();
+
+    /// <summary>Resolvido a cada gravação: o microfone pode ter sido ligado ou desligado entretanto.</summary>
+    private static int FindDevice(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return DefaultDevice;
+        var devices = ListDevices();
+        for (var i = 0; i < devices.Count; i++)
+        {
+            // O Windows corta o nome a 31 caracteres: aceita correspondência parcial nos dois sentidos.
+            if (devices[i].Contains(name, StringComparison.OrdinalIgnoreCase) ||
+                name.Contains(devices[i], StringComparison.OrdinalIgnoreCase))
+                return i;
+        }
+        return DefaultDevice;
+    }
 
     public void Start()
     {
@@ -42,7 +60,7 @@ public sealed class NAudioRecorder : IAudioRecorder
             {
                 _waveIn = new WaveInEvent
                 {
-                    DeviceNumber = _deviceNumber,
+                    DeviceNumber = FindDevice(_microphone()),
                     WaveFormat = new WaveFormat(SampleRate, 16, 1),
                     BufferMilliseconds = 50
                 };

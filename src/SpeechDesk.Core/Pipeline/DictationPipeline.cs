@@ -22,6 +22,7 @@ public sealed class DictationPipeline
 
     private DictationContext _context = DictationContext.Unknown;
     private bool _translateNatively;
+    private bool _stopping;
     private DictationState _state = DictationState.Idle;
 
     public DictationPipeline(
@@ -88,7 +89,20 @@ public sealed class DictationPipeline
     /// <summary>Pára a gravação e processa. Devolve o texto inserido (ou vazio).</summary>
     public async Task<string> EndRecordingAsync(CancellationToken ct = default)
     {
-        if (!_recorder.IsRecording) return string.Empty;
+        if (!_recorder.IsRecording || _stopping) return string.Empty;
+
+        // Quem fala costuma soltar a tecla ainda a acabar a última palavra.
+        _stopping = true;
+        try
+        {
+            var tail = _settings().Hotkey.ReleaseTailMs;
+            if (tail > 0) await Task.Delay(tail, ct);
+        }
+        finally
+        {
+            _stopping = false;
+        }
+        if (!_recorder.IsRecording) return string.Empty; // cancelado durante a cauda
         var clip = _recorder.Stop();
 
         if (!await _gate.WaitAsync(0, ct))

@@ -54,9 +54,9 @@ public class DictationPipelineTests
     }
 
     private static (DictationPipeline Pipeline, FakeInjector Injector, FakeHistory History, FakeStt Stt) Build(
-        string transcript, int durationMs = 1500, string process = "notepad")
+        string transcript, int durationMs = 1500, string process = "notepad", AppSettings? settings = null)
     {
-        var settings = new AppSettings();
+        settings ??= new AppSettings();
         var injector = new FakeInjector();
         var history = new FakeHistory();
         var stt = new FakeStt(transcript);
@@ -65,6 +65,22 @@ public class DictationPipelineTests
             [new RuleBasedFormatter(() => settings)],
             injector, new FakeApp(process), () => settings, history);
         return (pipeline, injector, history, stt);
+    }
+
+    [Fact]
+    public async Task Cancel_during_release_tail_discards_the_recording()
+    {
+        var settings = new AppSettings();
+        settings.Hotkey.ReleaseTailMs = 200;
+        var (pipeline, injector, _, _) = Build("olá", settings: settings);
+
+        pipeline.BeginRecording();
+        var ending = pipeline.EndRecordingAsync();
+        pipeline.Cancel();
+
+        Assert.Equal(string.Empty, await ending);
+        Assert.Empty(injector.Injected);
+        Assert.Equal(DictationState.Idle, pipeline.State);
     }
 
     [Fact]

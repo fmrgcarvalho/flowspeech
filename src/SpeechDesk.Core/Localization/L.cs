@@ -38,6 +38,7 @@ public static class L
         ["app.alreadyRunning"] = ("SpeechDesk is already running (icon next to the clock).", "O SpeechDesk já está a correr (ícone junto ao relógio)."),
         ["app.ready"] = ("SpeechDesk is ready. Hold Right Ctrl to dictate; double-tap for hands-free.", "SpeechDesk pronto. Mantém o Ctrl direito premido para ditar; dois toques = mãos-livres."),
         ["app.settingsReloaded"] = ("Settings reloaded. (Changing the engine or model requires a restart.)", "Definições recarregadas. (Mudar o motor ou o modelo requer reiniciar.)"),
+        ["app.microphoneChanged"] = ("Microphone: {0}", "Microfone: {0}"),
         ["app.languageChanged"] = ("Language set to English.", "Língua alterada para português."),
 
         // Tray menu
@@ -52,6 +53,8 @@ public static class L
         ["tray.aiToggle"] = ("Clean up text with AI", "Limpar texto com IA"),
         ["tray.translateToggle"] = ("Translate to English", "Traduzir para inglês"),
         ["tray.language"] = ("Language", "Língua"),
+        ["tray.microphone"] = ("Microphone", "Microfone"),
+        ["tray.microphoneDefault"] = ("Windows default", "Por omissão do Windows"),
         ["tray.openSettings"] = ("Open settings", "Abrir definições"),
         ["tray.reloadSettings"] = ("Reload settings", "Recarregar definições"),
         ["tray.openHistory"] = ("Open history", "Abrir histórico"),
@@ -81,7 +84,9 @@ public static class L
 
         // Models
         ["model.missing.parakeet"] = ("Speech model missing: {0}", "Modelo de transcrição em falta: {0}"),
-        ["model.missing.whisper"] = ("Whisper model missing: {0}", "Modelo Whisper em falta: {0}"),
+        ["model.nonAsciiPath"] = ("The speech engine cannot open paths with accented characters: {0}. Move the models to a folder without accents.",
+            "O motor de transcrição não consegue abrir caminhos com acentos: {0}. Mova os modelos para uma pasta sem acentos."),
+        ["model.missing.whisper"] =("Whisper model missing: {0}", "Modelo Whisper em falta: {0}"),
         ["model.missing.ai"] = ("AI model missing: {0}", "Modelo de IA em falta: {0}"),
         ["model.ask.title"] = ("Download model", "Descarregar modelo"),
         ["model.ask.parakeet"] = ("SpeechDesk needs the speech recognition model (NVIDIA Parakeet, about 0.7 GB) to work.\n\nDownload it now? It only happens once.", "O SpeechDesk precisa do modelo de transcrição (NVIDIA Parakeet, cerca de 0,7 GB) para funcionar.\n\nDescarregar agora? Só acontece uma vez."),

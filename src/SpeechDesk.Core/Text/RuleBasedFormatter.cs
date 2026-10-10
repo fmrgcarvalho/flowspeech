@@ -42,7 +42,8 @@ public sealed partial class RuleBasedFormatter(Func<AppSettings> settings) : ITe
 
     // ---- 1. Hesitações -------------------------------------------------------------
 
-    [GeneratedRegex(@"(?<![\p{L}])(hum+|hmm+|ã+h*|ah+m*|eh+m*|uh+m*|um+|er+m*)(?![\p{L}])[,.]?\s*", RegexOptions.IgnoreCase)]
+    // "um" sozinho não entra: em português é o artigo ("um exemplo"). Só "umm", "ummm"…
+    [GeneratedRegex(@"(?<![\p{L}])(hum+|hmm+|ã+h*|ah+m*|eh+m*|uh+m*|umm+|er+m*)(?![\p{L}])[,.]?\s*", RegexOptions.IgnoreCase)]
     private static partial Regex FillerRegex();
 
     internal static string RemoveFillers(string text) => FillerRegex().Replace(text, string.Empty);
