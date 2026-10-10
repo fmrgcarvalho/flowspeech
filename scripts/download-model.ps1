@@ -5,9 +5,10 @@
 .EXAMPLE
   ./scripts/download-model.ps1                   # Parakeet TDT 0.6B v3 int8 (por omissão, ~0,7 GB)
   ./scripts/download-model.ps1 -Engine whisper   # Whisper large-v3-turbo q5_0 (alternativa, ~550 MB)
+  ./scripts/download-model.ps1 -Engine ai        # Qwen 2.5 1.5B Instruct Q4_K_M para limpeza com IA (~1 GB)
 #>
 param(
-    [ValidateSet("parakeet", "whisper")]
+    [ValidateSet("parakeet", "whisper", "ai")]
     [string]$Engine = "parakeet"
 )
 
@@ -39,6 +40,22 @@ if ($Engine -eq "parakeet") {
     if (Test-Path $testWavs) { Remove-Item $testWavs -Recurse -Force }
 
     Write-Host "Modelo pronto em $target"
+}
+elseif ($Engine -eq "ai") {
+    $file = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
+    $dest = Join-Path $dir $file
+    $url  = "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/$file"
+
+    if (Test-Path $dest) {
+        Write-Host "Já existe: $dest"
+    } else {
+        Write-Host "A descarregar $url ..."
+        Invoke-WebRequest -Uri $url -OutFile $dest
+        Write-Host "Guardado em $dest"
+    }
+
+    Write-Host ""
+    Write-Host 'Liga a opção "Limpar texto com IA" no menu do ícone do FlowSpeech.'
 }
 else {
     $file = "ggml-large-v3-turbo-q5_0.bin"

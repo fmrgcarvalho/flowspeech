@@ -17,7 +17,7 @@ português europeu e inglês e latência baixa em CPU comum. Sem dependência de
 - `ISpeechToText` com três adaptadores: `ParakeetSpeechToText` (omissão), `WhisperLocalSpeechToText`
   (alternativa para línguas fora das 25) e `CloudSpeechToText` (API compatível OpenAI, desligado).
 - A chave cloud só é lida de variável de ambiente, nunca do ficheiro.
-- Pós-processamento apenas por regras determinísticas (sem LLM).
+- Pós-processamento por regras determinísticas; limpeza com modelo de linguagem é opcional (ver ADR-0004).
 
 ## Consequências
 - Primeira utilização requer descarregar ~0,7 GB.

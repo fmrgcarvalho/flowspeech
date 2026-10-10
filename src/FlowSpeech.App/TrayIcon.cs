@@ -11,13 +11,23 @@ public sealed class TrayIcon : IDisposable
 {
     private readonly Forms.NotifyIcon _icon;
     private readonly Forms.ToolStripMenuItem _status;
+    private readonly Forms.ToolStripMenuItem _aiToggle;
+    private readonly Func<bool> _aiEnabled;
 
-    public TrayIcon(Action reloadSettings, Action exit)
+    public TrayIcon(Action reloadSettings, Action exit, Func<bool> aiEnabled, Action<bool> setAiEnabled)
     {
+        _aiEnabled = aiEnabled;
         _status = new Forms.ToolStripMenuItem("Pronto") { Enabled = false };
+        _aiToggle = new Forms.ToolStripMenuItem("Limpar texto com IA") { CheckOnClick = true, Checked = aiEnabled() };
+        _aiToggle.CheckedChanged += (_, _) =>
+        {
+            if (_aiToggle.Checked != _aiEnabled()) setAiEnabled(_aiToggle.Checked);
+        };
 
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add(_status);
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add(_aiToggle);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Abrir definições", null, (_, _) => Open(SettingsStore.SettingsPath));
         menu.Items.Add("Recarregar definições", null, (_, _) => reloadSettings());
@@ -41,13 +51,16 @@ public sealed class TrayIcon : IDisposable
         };
     }
 
+    /// <summary>Atualiza o visto do menu depois de recarregar as definições.</summary>
+    public void SyncAiToggle() => _aiToggle.Checked = _aiEnabled();
+
     public void SetState(DictationState state)
     {
         var text = state switch
         {
             DictationState.Recording => "A gravar",
             DictationState.Transcribing => "A transcrever",
-            DictationState.Formatting => "A formatar",
+            DictationState.Formatting => _aiEnabled() ? "A limpar com IA" : "A formatar",
             DictationState.Injecting => "A escrever",
             DictationState.Error => "Erro",
             _ => "Pronto"

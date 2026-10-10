@@ -15,9 +15,9 @@ Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em 
 O que acontece por baixo:
 
 ```
- Tecla global ──► Microfone 16 kHz ──► Parakeet TDT 0.6B v3 ──► Limpeza por regras ──► Ctrl+V na app ativa
- (hook de teclado)    (NAudio)          (sherpa-onnx, local)    (hesitações, dicionário,   (clipboard reposto)
-                                                                  snippets, pontuação)
+ Tecla global ──► Microfone 16 kHz ──► Parakeet TDT 0.6B v3 ──► [Limpeza com IA] ──► Regras ──► Ctrl+V na app ativa
+ (hook de teclado)    (NAudio)          (sherpa-onnx, local)     opcional, local     dicionário,  (clipboard reposto)
+                                                                 Qwen 2.5 1.5B       snippets
 ```
 
 ## Motor de transcrição
@@ -33,6 +33,27 @@ com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 O **Whisper large-v3-turbo** (whisper.cpp) continua disponível como alternativa — útil para línguas fora
 das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI, desligado por omissão.
 
+## Limpeza com IA (opcional)
+
+Podes escolher entre dois modos, no menu do ícone → **Limpar texto com IA**:
+
+| Modo | O que faz | Velocidade |
+|---|---|---|
+| **Sem IA** (omissão) | Regras: tira "hum"/"ãh", pontuação ditada, dicionário, snippets | Instantâneo |
+| **Com IA** | Antes das regras, um modelo de linguagem local corrige o texto: resolve auto-correções ("às 3, não, às 4" → "às 4"), corrige gramática, formata listas e ajusta o tom à app (formal no Outlook, casual no Slack) | +0,5–2 s por ditação em CPU |
+
+O modelo é o **Qwen 2.5 1.5B Instruct** (GGUF Q4_K_M, ~1 GB, licença Apache 2.0), a correr dentro da própria
+app com llama.cpp — sem servidor nem instalações extra. Salvaguardas: se o modelo demorar mais do que
+`TimeoutSeconds`, faltar, ou devolver algo que não pareça uma limpeza (ex.: responder a uma pergunta ditada),
+o FlowSpeech escreve o texto sem IA. A ditação nunca fica bloqueada.
+
+```powershell
+./scripts/download-model.ps1 -Engine ai     # uma vez
+```
+
+Para melhor qualidade em máquinas com mais RAM, qualquer modelo GGUF em formato ChatML serve
+(ex.: `qwen2.5-3b-instruct-q4_k_m.gguf`) — basta mudar `Formatting.Ai.ModelPath`.
+
 ## Funcionalidades
 
 | Funcionalidade | Estado | Notas |
@@ -41,9 +62,10 @@ das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI
 | Transcrição local rápida, PT-PT e EN | ✅ | Parakeet v3; Whisper como alternativa |
 | Remove "hum", "ãh" e hesitações | ✅ | Regras locais |
 | Pontuação e maiúsculas automáticas | ✅ | Modelo + regras; "vírgula", "ponto final", "nova linha" ditados |
+| Limpeza com IA local (auto-correções, gramática, tom) | ✅ | Opcional, interruptor no menu do ícone |
 | Dicionário pessoal (nomes, termos técnicos) | ✅ | Substituições aplicadas ao texto final |
 | Snippets ("o meu email" → endereço) | ✅ | `Snippets` em `settings.json` |
-| Estilo por aplicação (ex.: código sem ponto final) | 🟡 | Deteção da app feita; regras de estilo básicas |
+| Estilo por aplicação (formal, casual, código) | ✅ | Regras básicas; tom completo com a IA ligada |
 | Histórico das ditações | ✅ | `history.jsonl` local |
 | Modo de comandos sobre texto selecionado | ⏳ | Roadmap |
 | Falar baixinho (ganho automático + VAD) | ⏳ | Roadmap |
@@ -54,7 +76,7 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 
 - Windows 10/11 x64
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (para compilar)
-- ~1 GB livre para o modelo; 8 GB RAM recomendados
+- ~1 GB livre para o modelo de transcrição (+1 GB se usares a limpeza com IA); 8 GB RAM recomendados
 
 ## Arranque rápido
 
@@ -84,7 +106,10 @@ Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl
     "WhisperModelPath": "ggml-large-v3-turbo-q5_0.bin",
     "Language": "auto"                         // só Whisper/cloud; o Parakeet deteta sozinho
   },
-  "Formatting": { "RuleBasedCleanup": true },
+  "Formatting": {
+    "RuleBasedCleanup": true,
+    "Ai": { "Enabled": false, "ModelPath": "qwen2.5-1.5b-instruct-q4_k_m.gguf", "TimeoutSeconds": 6, "GpuLayers": 0 }
+  },
   "Dictionary": { "flow speech": "FlowSpeech", "gaiao": "Gaião" },
   "Snippets":   { "o meu email": "mgaiao25@gmail.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
@@ -101,6 +126,7 @@ flowspeech/
 ├── src/
 │   ├── FlowSpeech.Core/               # Domínio puro (net8.0): abstrações, pipeline, regras de texto, definições
 │   ├── FlowSpeech.Transcription/      # Motores: Parakeet (omissão), Whisper, API cloud
+│   ├── FlowSpeech.AiCleanup/          # Limpeza opcional com modelo de linguagem local (LLamaSharp)
 │   ├── FlowSpeech.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
 │   └── FlowSpeech.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
 ├── tests/FlowSpeech.Core.Tests/       # Testes unitários do domínio (xUnit)
@@ -120,4 +146,5 @@ Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Licenças de terceiros
 
 - Parakeet TDT 0.6B v3 — NVIDIA, CC-BY-4.0
-- sherpa-onnx — Apache 2.0 · whisper.cpp / Whisper.net — MIT · NAudio — MIT
+- Qwen 2.5 1.5B Instruct — Alibaba, Apache 2.0
+- sherpa-onnx — Apache 2.0 · whisper.cpp / Whisper.net — MIT · llama.cpp / LLamaSharp — MIT · NAudio — MIT

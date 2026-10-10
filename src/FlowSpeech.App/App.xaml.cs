@@ -2,6 +2,7 @@ using System.IO;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Threading;
+using FlowSpeech.AiCleanup;
 using FlowSpeech.Core.Abstractions;
 using FlowSpeech.Core.History;
 using FlowSpeech.Core.Pipeline;
@@ -18,6 +19,7 @@ public partial class App : Application
     private Mutex? _singleInstance;
     private FlowSettings _settings = new();
     private TrayIcon? _tray;
+    private LocalAiFormatter? _ai;
     private OverlayWindow? _overlay;
     private DictationController? _controller;
     private readonly List<IDisposable> _disposables = [];
@@ -49,7 +51,11 @@ public partial class App : Application
         var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         var stt = CreateSpeechToText(_settings, http);
 
-        var formatters = new List<ITextFormatter> { new RuleBasedFormatter(settings) };
+        // IA (opcional) primeiro, regras depois: o dicionário e os snippets têm sempre a última palavra.
+        _ai = new LocalAiFormatter(settings);
+        _ai.LoadFailed += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
+        _disposables.Add(_ai);
+        var formatters = new List<ITextFormatter> { _ai, new RuleBasedFormatter(settings) };
 
         var recorder = new NAudioRecorder();
         var hotkey = new LowLevelHotkeyListener(() => _settings.Hotkey.VirtualKey, () => _settings.Hotkey.DoubleTapMs);
@@ -67,10 +73,11 @@ public partial class App : Application
         _overlay = new OverlayWindow();
         recorder.LevelChanged += (_, level) => Dispatcher.BeginInvoke(() => _overlay.SetLevel(level));
 
-        _tray = new TrayIcon(ReloadSettings, () => Shutdown());
+        _tray = new TrayIcon(ReloadSettings, () => Shutdown(), () => _settings.Formatting.Ai.Enabled, SetAiEnabled);
         _controller = new DictationController(pipeline, hotkey, _overlay, _tray);
 
         hotkey.Start();
+        _ = _ai.WarmUpAsync();
         _tray.ShowInfo("FlowSpeech pronto. Mantém Right Ctrl premido para ditar; dois toques = mãos-livres.");
     }
 
@@ -102,9 +109,26 @@ public partial class App : Application
             t => Dispatcher.BeginInvoke(() => _tray?.ShowError(t.Exception!.GetBaseException().Message)),
             TaskContinuationOptions.OnlyOnFaulted);
 
+    private void SetAiEnabled(bool enabled)
+    {
+        _settings.Formatting.Ai.Enabled = enabled;
+        SettingsStore.Save(_settings);
+        if (enabled)
+        {
+            _tray?.ShowInfo("Limpeza com IA ligada. A carregar o modelo…");
+            _ = _ai?.WarmUpAsync();
+        }
+        else
+        {
+            _tray?.ShowInfo("Limpeza com IA desligada — só regras.");
+        }
+    }
+
     private void ReloadSettings()
     {
         _settings = SettingsStore.Load();
+        _tray?.SyncAiToggle();
+        _ = _ai?.WarmUpAsync();
         _tray?.ShowInfo("Definições recarregadas. (Mudar o motor ou o modelo requer reiniciar.)");
     }
 

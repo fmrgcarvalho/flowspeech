@@ -37,9 +37,11 @@ public partial class OverlayWindow : Window
                 ShowAtBottom();
                 break;
             case DictationState.Transcribing:
-            case DictationState.Formatting:
                 Label.Text = "A transcrever…";
                 SetLevel(0.1f);
+                break;
+            case DictationState.Formatting:
+                Label.Text = "A limpar texto…";
                 break;
             case DictationState.Injecting:
                 Label.Text = "A escrever…";

@@ -21,6 +21,7 @@
     <ProjectReference Include="..\FlowSpeech.Core\FlowSpeech.Core.csproj" />
     <ProjectReference Include="..\FlowSpeech.Platform.Windows\FlowSpeech.Platform.Windows.csproj" />
     <ProjectReference Include="..\FlowSpeech.Transcription\FlowSpeech.Transcription.csproj" />
+    <ProjectReference Include="..\FlowSpeech.AiCleanup\FlowSpeech.AiCleanup.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\flowspeech.ico" />

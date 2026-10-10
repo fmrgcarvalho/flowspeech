@@ -5,7 +5,7 @@
 1. **Local primeiro.** O caminho por omissão não faz chamadas de rede. Cloud é um adaptador opcional.
 2. **O núcleo não conhece o Windows.** `FlowSpeech.Core` é `net8.0` puro e testável em qualquer SO.
    Tudo o que toca Win32, áudio ou motores de transcrição vive atrás de interfaces.
-3. **A ditação nunca bloqueia.** Etapas opcionais (histórico) degradam graciosamente:
+3. **A ditação nunca bloqueia.** Etapas opcionais (limpeza com IA, histórico) degradam graciosamente:
    se falharem, o texto segue sem elas.
 4. **Latência é a funcionalidade.** Modelo pré-carregado, limpeza determinística instantânea,
    paste em vez de digitação.
@@ -13,11 +13,11 @@
 ## Dependências entre projetos
 
 ```
-            FlowSpeech.App (WPF, composition root)
-              /               |                \
- Platform.Windows      Transcription            │
-              \               |                /
-              FlowSpeech.Core (abstrações + domínio)
+             FlowSpeech.App (WPF, composition root)
+            /              |              |          \
+ Platform.Windows    Transcription    AiCleanup       │
+            \              |              |          /
+               FlowSpeech.Core (abstrações + domínio)
 ```
 
 ## Abstrações (`FlowSpeech.Core.Abstractions`)
@@ -27,7 +27,7 @@
 | `IHotkeyListener` | `LowLevelHotkeyListener` (WH_KEYBOARD_LL) | Raw Input, atalhos com modificadores |
 | `IAudioRecorder` | `NAudioRecorder` (WaveIn 16 kHz mono) | WASAPI com escolha de dispositivo, VAD |
 | `ISpeechToText` | `ParakeetSpeechToText` (sherpa-onnx) | `WhisperLocalSpeechToText`, `CloudSpeechToText` |
-| `ITextFormatter` | `RuleBasedFormatter` | Regras por estilo/app |
+| `ITextFormatter` | `LocalAiFormatter` (opcional) → `RuleBasedFormatter` | Outros modelos GGUF |
 | `ITextInjector` | `ClipboardTextInjector` (Paste/Type) | UI Automation `ValuePattern` |
 | `IActiveAppProvider` | `ForegroundAppProvider` | Ler texto à volta do cursor (contexto) |
 | `IHistoryStore` | `JsonlHistoryStore` | SQLite com pesquisa |
@@ -45,14 +45,19 @@ Idle ──BeginRecording──► Recording ──EndRecording──► Transcr
 2. Clips mais curtos que `MinRecordingMs` são descartados (toques acidentais e 1.º toque do duplo-toque).
 3. Transcrição com o motor configurado. O Parakeet deteta a língua e já devolve pontuação e maiúsculas;
    Whisper e cloud recebem o dicionário pessoal como *prompt*.
-4. Limpeza por regras: hesitações, pontuação falada, dicionário, snippets, espaçamento, maiúsculas.
-5. Injeção: guarda o clipboard, cola, espera 250 ms, repõe o clipboard.
+4. Se a limpeza com IA estiver ligada, o `LocalAiFormatter` corrige o texto com o Qwen 2.5 1.5B
+   (timeout curto; resposta rejeitada se não parecer uma limpeza). Prompt e salvaguardas em
+   `AiCleanupPrompt` (Core, testável).
+5. Limpeza por regras (sempre por último, para o dicionário e os snippets terem a última palavra):
+   hesitações, pontuação falada, dicionário, snippets, espaçamento, maiúsculas.
+6. Injeção: guarda o clipboard, cola, espera 250 ms, repõe o clipboard.
 
 ## Decisões técnicas
 
 - [ADR-0001 — Stack .NET 8 + WPF](adr/0001-stack.md)
 - [ADR-0002 — Inserção de texto via clipboard](adr/0002-text-injection.md)
 - [ADR-0003 — Motor de transcrição: Parakeet local](adr/0003-stt-local-first.md)
+- [ADR-0004 — Limpeza opcional com modelo de linguagem embebido](adr/0004-ai-cleanup.md)
 
 ## Threading
 
@@ -61,4 +66,5 @@ Idle ──BeginRecording──► Recording ──EndRecording──► Transcr
 - O `WaveInEvent` é criado sem `SynchronizationContext` para os buffers chegarem na thread de áudio
   e o `Stop()` poder esperar pelo último buffer sem deadlock.
 - O clipboard WPF requer STA → `ClipboardTextInjector` usa o `Dispatcher`.
-- A transcrição corre em background (`Task.Run`); a UI só recebe mudanças de estado.
+- A transcrição e a inferência do modelo de linguagem correm em background; a UI só recebe mudanças de estado.
+- O modelo de IA só é carregado se a opção estiver ligada (no arranque ou ao ligar no menu).

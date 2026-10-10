@@ -88,6 +88,21 @@ public sealed class FormattingSettings
 {
     /// <summary>Regras locais: remover hesitações, pontuação falada, maiúsculas, dicionário e snippets.</summary>
     public bool RuleBasedCleanup { get; set; } = true;
+
+    /// <summary>Limpeza com IA local (opcional). Pode ser ligada/desligada no menu do ícone.</summary>
+    public AiCleanupSettings Ai { get; set; } = new();
+}
+
+public sealed class AiCleanupSettings
+{
+    /// <summary>Desligado = só regras (instantâneo). Ligado = o modelo corrige o texto antes das regras.</summary>
+    public bool Enabled { get; set; } = false;
+    /// <summary>Modelo GGUF. Relativo a %AppData%\FlowSpeech\models se não for absoluto.</summary>
+    public string ModelPath { get; set; } = "qwen2.5-1.5b-instruct-q4_k_m.gguf";
+    /// <summary>Se o modelo demorar mais do que isto, escreve-se o texto sem IA.</summary>
+    public int TimeoutSeconds { get; set; } = 6;
+    /// <summary>Camadas na GPU (0 = só CPU).</summary>
+    public int GpuLayers { get; set; } = 0;
 }
 
 public static class SettingsStore

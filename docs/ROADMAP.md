@@ -6,6 +6,7 @@
 - [x] Whisper large-v3-turbo e API cloud como motores alternativos
 - [x] Limpeza por regras: hesitações, pontuação falada PT/EN, maiúsculas
 - [x] Dicionário pessoal e snippets
+- [x] Limpeza opcional com IA local (Qwen 2.5 1.5B via LLamaSharp), interruptor no menu
 - [x] Inserção em qualquer app (paste com reposição do clipboard; modo digitação)
 - [x] Overlay com nível de áudio e estado; ícone na tray
 - [x] Histórico local em JSONL
@@ -13,8 +14,8 @@
 
 ## v0.2 — Qualidade do texto
 - [ ] Aprender com correções: detetar quando o utilizador edita o texto colado e propor entradas no dicionário
-- [ ] Auto-correções faladas ("às 3, não, às 4" → "às 4") por regras
-- [ ] Regras de estilo por app mais ricas (formal, casual, código)
+- [ ] Escolher o modelo de IA na janela de definições (1.5B rápido / 3B melhor)
+- [ ] Aceleração GPU para a IA (backend CUDA/Vulkan do llama.cpp)
 - [ ] Janela de definições (WPF) em vez de editar JSON
 - [ ] Escolha do microfone e teste de nível
 
