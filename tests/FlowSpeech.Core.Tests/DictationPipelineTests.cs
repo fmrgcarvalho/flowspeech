@@ -106,7 +106,7 @@ public class DictationPipelineTests
         await pipeline.EndRecordingAsync();
 
         Assert.Contains("FlowSpeech", stt.LastOptions!.Prompt);
-        Assert.Contains("Gaião", stt.LastOptions!.Prompt);
+        Assert.Contains(".NET", stt.LastOptions!.Prompt);
     }
 
     [Fact]

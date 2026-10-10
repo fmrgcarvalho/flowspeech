@@ -32,8 +32,8 @@ public class RuleBasedFormatterTests
     [Fact]
     public void Applies_personal_dictionary_case_insensitively()
     {
-        var result = Create().Format("estou a testar o Flow Speech do miguel gaiao", WritingStyle.Raw);
-        Assert.Equal("Estou a testar o FlowSpeech do miguel Gaião", result);
+        var result = Create().Format("estou a testar o Flow Speech em dot net", WritingStyle.Raw);
+        Assert.Equal("Estou a testar o FlowSpeech em .NET", result);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class RuleBasedFormatterTests
     [Theory]
     [InlineData("a reunião é às 10:30", "A reunião é às 10:30")]
     [InlineData("custa 1,5 euros", "Custa 1,5 euros")]
-    [InlineData("vê em https://miguelgaiao.ai/blog", "Vê em https://miguelgaiao.ai/blog")]
+    [InlineData("vê em https://example.com/blog", "Vê em https://example.com/blog")]
     public void Preserves_times_decimals_and_urls(string input, string expected) =>
         Assert.Equal(expected, Create().Format(input, WritingStyle.Raw));
 

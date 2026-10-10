@@ -89,7 +89,8 @@ public sealed partial class RuleBasedFormatter(Func<FlowSettings> settings) : IT
 
     // ---- 5. Espaçamento e maiúsculas ----------------------------------------------
 
-    [GeneratedRegex(@"[ \t]+([,.;:!?)])")] private static partial Regex SpaceBeforePunct();
+    // Só remove o espaço se a pontuação não iniciar uma palavra (preserva ".NET", ".gitignore").
+    [GeneratedRegex(@"[ \t]+([,.;:!?)])(?![\p{L}\p{N}])")] private static partial Regex SpaceBeforePunct();
     // Só antes de letras: preserva "10:30", "1,5", emails e URLs.
     [GeneratedRegex(@"([,;!?])(?=\p{L})")] private static partial Regex MissingSpaceAfterPunct();
     [GeneratedRegex(@"\(\s+")] private static partial Regex SpaceAfterOpenParen();

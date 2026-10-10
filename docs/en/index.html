@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlowSpeech — local voice dictation for Windows</title>
+<meta name="description" content="Hold a key, speak, let go. Your words appear wherever the cursor is, in any Windows app. Free, open source and 100% local.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="pt-PT" href="https://fmrgcarvalho.github.io/flowspeech/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EDF0F2;
+    --surface: #FFFFFF;
+    --ink: #17202B;
+    --muted: #556170;
+    --line: #D3D9DF;
+    --live: #E0245E;      /* recording in progress */
+    --act: #0F7C7A;       /* actions and links */
+    --act-ink: #FFFFFF;
+    --key-top: #FAFBFC;
+    --key-side: #B9C2CC;
+    --code-bg: #17202B;
+    --code-ink: #E6EBF0;
+    --display: "Bricolage Grotesque", system-ui, sans-serif;
+    --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11171E; --surface: #19212A; --ink: #E6EBF0; --muted: #9AA6B2; --line: #2B3540;
+      --live: #FF4D80; --act: #3FC1BE; --act-ink: #0B1A1A;
+      --key-top: #2A3440; --key-side: #0C1116; --code-bg: #0C1116; --code-ink: #E6EBF0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11171E; --surface: #19212A; --ink: #E6EBF0; --muted: #9AA6B2; --line: #2B3540;
+    --live: #FF4D80; --act: #3FC1BE; --act-ink: #0B1A1A;
+    --key-top: #2A3440; --key-side: #0C1116; --code-bg: #0C1116; --code-ink: #E6EBF0;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 18px/1.6 var(--body);
+  }
+  a { color: var(--act); text-underline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--act); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- header ---------- */
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font: 700 20px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .brand svg { width: 28px; height: 28px; }
+  .top nav { display: flex; gap: 22px; font-size: 16px; }
+  .top nav a { color: var(--muted); text-decoration: none; }
+  .top nav a:hover { color: var(--ink); }
+
+  /* ---------- hero ---------- */
+  .hero { display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px; align-items: center; padding: 48px 0 88px; }
+  h1 {
+    font: 800 clamp(42px, 6vw, 76px)/0.98 var(--display);
+    letter-spacing: -0.035em; margin: 0 0 24px;
+    font-variation-settings: "opsz" 96;
+  }
+  .lede { font-size: 21px; color: var(--muted); max-width: 30em; margin: 0 0 32px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 12px;
+    font: 700 17px/1 var(--body); text-decoration: none; border: 2px solid var(--act);
+  }
+  .btn.primary { background: var(--act); color: var(--act-ink); }
+  .btn.ghost { color: var(--act); }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 28px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 16px; }
+  .facts li::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--act); margin-right: 9px; vertical-align: 2px; }
+
+  /* ---------- demo ---------- */
+  .demo { position: relative; }
+  .window {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 30px 60px -30px rgba(23, 32, 43, .35); overflow: hidden;
+  }
+  .titlebar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  .titlebar .app { width: 18px; height: 18px; border-radius: 4px; background: #2563C9; flex: none; }
+  .titlebar .winbtns { margin-left: auto; display: flex; gap: 14px; }
+  .titlebar .winbtns i { display: block; width: 10px; height: 10px; border: 1.5px solid var(--key-side); border-radius: 2px; }
+  .mailhead { padding: 12px 18px; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+  .mailhead b { color: var(--ink); font-weight: 400; }
+  .editor { min-height: 210px; padding-bottom: 64px; padding: 18px; font-size: 17px; line-height: 1.55; white-space: pre-wrap; }
+  .editor p { margin: 0 0 10px; }
+  .caret { display: inline-block; width: 2px; height: 1.15em; background: var(--ink); vertical-align: -3px; animation: blink 1.05s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .editor .new { background: color-mix(in srgb, var(--act) 18%, transparent); border-radius: 3px; transition: background 1.6s ease; }
+  .editor .new.settled { background: transparent; }
+
+  .screen { position: relative; }
+  .pill {
+    position: absolute; left: 50%; bottom: 16px; transform: translate(-50%, 8px);
+    display: flex; align-items: center; gap: 12px; padding: 10px 18px; min-width: 210px;
+    background: #17202B; color: #E5E7EB; border: 1px solid #3A4654; border-radius: 999px; font-size: 15px;
+    opacity: 0; transition: opacity .18s ease, transform .18s ease; pointer-events: none; white-space: nowrap;
+  }
+  .pill.on { opacity: 1; transform: translate(-50%, 0); }
+  .bars { display: flex; gap: 3px; align-items: center; height: 20px; }
+  .bars i { display: block; width: 4px; height: 5px; border-radius: 2px; background: #38BDF8; transition: height .08s linear; }
+  .pill.rec .bars i { background: var(--live); }
+  .heard { max-width: 300px; overflow: hidden; text-overflow: ellipsis; color: #9CA3AF; font-style: italic; }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; margin-top: 36px; }
+  .key {
+    position: relative; flex: none; width: 128px; height: 74px; border-radius: 12px; cursor: pointer;
+    background: var(--key-top); color: var(--ink); border: 1px solid var(--key-side);
+    box-shadow: 0 6px 0 var(--key-side), 0 10px 18px -8px rgba(0,0,0,.35);
+    font: 700 17px/1.1 var(--display); text-align: left; padding: 10px 12px; user-select: none; -webkit-user-select: none; touch-action: none;
+    transition: transform .06s, box-shadow .06s;
+  }
+  .key small { display: block; font: 400 13px/1.2 var(--body); color: var(--muted); margin-top: 6px; }
+  .key[aria-pressed="true"] { transform: translateY(5px); box-shadow: 0 1px 0 var(--key-side), 0 3px 6px -3px rgba(0,0,0,.3); border-color: var(--live); }
+  .key[aria-pressed="true"]::after { content: ""; position: absolute; top: 10px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--live); }
+  .hint { font-size: 15px; color: var(--muted); max-width: 20em; margin: 0; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 10px 22px; width: 100%; }
+  .switch { display: inline-flex; align-items: center; gap: 10px; font-size: 16px; cursor: pointer; }
+  .switch input { appearance: none; -webkit-appearance: none; margin: 0; width: 42px; height: 24px; border-radius: 999px; background: var(--line); position: relative; cursor: pointer; transition: background .15s; flex: none; }
+  .switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .switch input:checked { background: var(--act); }
+  .switch input:checked::after { transform: translateX(18px); }
+
+  /* ---------- sections ---------- */
+  section { padding: 84px 0; border-top: 1px solid var(--line); }
+  h2 { font: 800 clamp(30px, 3.6vw, 44px)/1.08 var(--display); letter-spacing: -0.025em; margin: 0 0 14px; max-width: 18em; }
+  .sub { color: var(--muted); max-width: 36em; margin: 0 0 40px; font-size: 19px; }
+  h3 { font: 700 21px/1.25 var(--display); margin: 0 0 6px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 44px; }
+  .features p { margin: 0; color: var(--muted); font-size: 17px; }
+  .features .opt { font-size: 13px; font-weight: 700; color: var(--act); border: 1.5px solid currentColor; border-radius: 6px; padding: 1px 7px; margin-left: 8px; vertical-align: 3px; font-family: var(--body); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 17px; }
+  th, td { text-align: left; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 700 15px/1.3 var(--body); color: var(--muted); }
+  kbd {
+    display: inline-block; font: 700 14px/1 var(--body); padding: 6px 9px; border-radius: 7px;
+    background: var(--surface); border: 1px solid var(--key-side); box-shadow: 0 2px 0 var(--key-side); white-space: nowrap;
+  }
+  .table-scroll { overflow-x: auto; }
+
+  .models { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .model { padding: 26px 26px 28px; }
+  .model + .model { border-left: 1px solid var(--line); }
+  .model .role { font-size: 15px; color: var(--muted); margin: 0 0 14px; }
+  .model ul { margin: 14px 0 0; padding-left: 18px; font-size: 16px; color: var(--muted); }
+  .model li { margin-bottom: 4px; }
+
+  .steps { counter-reset: s; list-style: none; margin: 0; padding: 0; max-width: 760px; }
+  .steps li { counter-increment: s; position: relative; padding: 0 0 34px 58px; }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 0; top: -2px; width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center; font: 800 18px/1 var(--display); background: var(--ink); color: var(--bg);
+  }
+  .steps p { margin: 0 0 12px; color: var(--muted); }
+  .code { position: relative; }
+  pre {
+    margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 12px; padding: 16px 18px; padding-right: 92px;
+    font: 15px/1.6 var(--mono); overflow-x: auto;
+  }
+  .copy {
+    position: absolute; top: 10px; right: 10px; padding: 7px 12px; border-radius: 8px; border: 1px solid #3A4654;
+    background: #222C38; color: #E6EBF0; font: 700 14px/1 var(--body); cursor: pointer;
+  }
+
+  .status { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; }
+  .status ul { margin: 0; padding-left: 20px; color: var(--muted); }
+  .status li { margin-bottom: 8px; }
+  .status li strong { color: var(--ink); font-weight: 700; }
+
+  footer { padding: 44px 0 64px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+  footer p { margin: 0 0 8px; max-width: 60em; }
+
+  @media (max-width: 920px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 24px; }
+    .features { grid-template-columns: 1fr 1fr; }
+    .models { grid-template-columns: 1fr; }
+    .model + .model { border-left: 0; border-top: 1px solid var(--line); }
+    .status { grid-template-columns: 1fr; gap: 28px; }
+  }
+  @media (max-width: 600px) {
+    body { font-size: 17px; }
+    .wrap { padding: 0 16px; }
+    .top nav { display: none; }
+    .features { grid-template-columns: 1fr; }
+    section { padding: 60px 0; }
+    .lede { font-size: 19px; }
+    .heard { max-width: 170px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#17202B"/><rect x="6" y="12.5" width="3" height="7" rx="1.5" fill="#38BDF8"/><rect x="11" y="9.5" width="3" height="13" rx="1.5" fill="#38BDF8"/><rect x="16" y="6.5" width="3" height="19" rx="1.5" fill="#38BDF8"/><rect x="21" y="9.5" width="3" height="13" rx="1.5" fill="#38BDF8"/></svg>
+      FlowSpeech
+    </a>
+    <nav aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/fmrgcarvalho/flowspeech">GitHub</a>
+      <a href="../" hreflang="pt-PT" lang="pt-PT">Português</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>Speak. Your words appear where the cursor is.</h1>
+        <p class="lede">Voice dictation for Windows that runs entirely on your PC. Hold a key, speak in English or Portuguese, let go — and the text is typed into Outlook, Teams, VS Code or any other app.</p>
+        <div class="cta">
+          <a class="btn primary" href="#install">Install</a>
+          <a class="btn ghost" href="https://github.com/fmrgcarvalho/flowspeech">View the code</a>
+        </div>
+        <ul class="facts">
+          <li>Free and open source</li>
+          <li>No audio leaves your PC</li>
+          <li>Works offline</li>
+        </ul>
+      </div>
+
+      <div class="demo" aria-label="Interactive demo">
+        <div class="screen">
+        <div class="window">
+          <div class="titlebar"><span class="app" aria-hidden="true"></span>New message — Outlook<span class="winbtns" aria-hidden="true"><i></i><i></i><i></i></span></div>
+          <div class="mailhead">To: <b>team@example.com</b> &nbsp; Subject: <b>Meeting</b></div>
+          <div class="editor" id="editor" aria-live="polite"><span class="caret" aria-hidden="true"></span></div>
+        </div>
+        <div class="pill" id="pill" aria-hidden="true">
+          <span class="bars" id="bars"><i></i><i></i><i></i><i></i><i></i></span>
+          <span id="pillLabel">Listening…</span>
+          <span class="heard" id="heard"></span>
+        </div>
+        </div>
+
+        <div class="controls">
+          <button class="key" id="key" type="button" aria-pressed="false" aria-describedby="keyHint">Ctrl<small>right</small></button>
+          <p class="hint" id="keyHint">Hold the key to “dictate” a sample sentence. Your real right Ctrl key works too.</p>
+          <div class="toggles">
+            <label class="switch"><input type="checkbox" id="ai"> Clean up with AI</label>
+            <label class="switch"><input type="checkbox" id="en"> Translate to English</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features" aria-labelledby="f-title">
+      <h2 id="f-title">Made for people who write all day</h2>
+      <p class="sub">It works in every Windows app, because FlowSpeech types wherever the cursor is — no integrations needed.</p>
+      <div class="features">
+        <div>
+          <h3>English and Portuguese</h3>
+          <p>The speech model covers 25 European languages, including English and European Portuguese, and detects on its own when you switch mid-sentence.</p>
+        </div>
+        <div>
+          <h3>Spoken punctuation</h3>
+          <p>Say “comma”, “full stop” or “new line” and you get the punctuation. The “um”s and “uh”s disappear.</p>
+        </div>
+        <div>
+          <h3>Dictionary and snippets</h3>
+          <p>Teach it names and technical terms. Say “my email” and the full address appears.</p>
+        </div>
+        <div>
+          <h3>AI clean-up <span class="opt">optional</span></h3>
+          <p>When you correct yourself (“at 3, no, at 4”), only the final version stays. Fixes grammar and adapts the tone to the app.</p>
+        </div>
+        <div>
+          <h3>Speak Portuguese, type English <span class="opt">optional</span></h3>
+          <p>Turn on translation in the menu and the text comes out in English, about one to two seconds after you let go of the key.</p>
+        </div>
+        <div>
+          <h3>Private by default</h3>
+          <p>Transcription, clean-up and translation run on your processor. History stays in a local file.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="shortcuts" aria-labelledby="a-title">
+      <h2 id="a-title">Shortcuts</h2>
+      <p class="sub">A single key, and you can change it. AI clean-up and translation are switched on from the icon menu next to the clock.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th scope="col">Shortcut</th><th scope="col">What it does</th></tr></thead>
+          <tbody>
+            <tr><td>Hold <kbd>Right Ctrl</kbd></td><td>Records while the key is held; types the text when you let go.</td></tr>
+            <tr><td>Double-tap <kbd>Right Ctrl</kbd></td><td>Hands-free mode: records without holding the key.</td></tr>
+            <tr><td>Tap <kbd>Right Ctrl</kbd></td><td>In hands-free mode, stops and types the text.</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Cancels the recording.</td></tr>
+            <tr><td><kbd>Right Ctrl</kbd> + another key</td><td>Cancels — it is a normal shortcut, like Ctrl+C.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="models" aria-labelledby="m-title">
+      <h2 id="m-title">Models that run on your PC</h2>
+      <p class="sub">Pick the engine in the settings. Models are downloaded once with a script.</p>
+      <div class="models">
+        <div class="model">
+          <p class="role">Speech to text — default</p>
+          <h3>NVIDIA Parakeet TDT 0.6B v3</h3>
+          <ul>
+            <li>25 European languages, including English</li>
+            <li>Very fast on CPU</li>
+            <li>~0.7 GB · CC-BY-4.0 licence</li>
+          </ul>
+        </div>
+        <div class="model">
+          <p class="role">Speech to text — alternative</p>
+          <h3>OpenAI Whisper large-v3-turbo</h3>
+          <ul>
+            <li>99+ languages</li>
+            <li>Built-in translation to English</li>
+            <li>~0.55 GB · MIT licence</li>
+          </ul>
+        </div>
+        <div class="model">
+          <p class="role">Clean-up and translation — optional</p>
+          <h3>Qwen 2.5 1.5B Instruct</h3>
+          <ul>
+            <li>Runs inside the app, no server</li>
+            <li>Turn it on or off from the menu</li>
+            <li>~1 GB · Apache 2.0 licence</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="install" aria-labelledby="i-title">
+      <h2 id="i-title">Install</h2>
+      <p class="sub">You need Windows 10 or 11 (x64), the <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 SDK</a> and 8 GB of RAM. Without AI, FlowSpeech uses about 1 GB; with AI, about 2.5 GB.</p>
+      <ol class="steps">
+        <li>
+          <h3>Get the code</h3>
+          <div class="code"><pre><code>git clone https://github.com/fmrgcarvalho/flowspeech.git
+cd flowspeech</code></pre><button class="copy" type="button">Copy</button></div>
+        </li>
+        <li>
+          <h3>Download the speech model</h3>
+          <p>Only once. Run it again with <code>-Engine ai</code> if you want AI clean-up, or translation with Parakeet.</p>
+          <div class="code"><pre><code>./scripts/download-model.ps1</code></pre><button class="copy" type="button">Copy</button></div>
+        </li>
+        <li>
+          <h3>Start it</h3>
+          <p>An icon appears next to the clock. Open Notepad, hold Right Ctrl and speak.</p>
+          <div class="code"><pre><code>dotnet run --project src/FlowSpeech.App</code></pre><button class="copy" type="button">Copy</button></div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="status" aria-labelledby="e-title">
+      <h2 id="e-title">Project status</h2>
+      <p class="sub">FlowSpeech is in active development (version 0.1). There is no installer yet — you build it from source.</p>
+      <div class="status">
+        <div>
+          <h3>Available</h3>
+          <ul>
+            <li><strong>Dictation</strong> with hold-to-talk and hands-free mode</li>
+            <li><strong>Parakeet and Whisper</strong>, running locally</li>
+            <li><strong>Rules</strong>: filler words, spoken punctuation, dictionary, snippets</li>
+            <li>Optional <strong>AI clean-up</strong> and <strong>translation</strong></li>
+            <li>Local <strong>history</strong></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Coming next</h3>
+          <ul>
+            <li>Settings window and microphone selection</li>
+            <li>Voice commands on selected text</li>
+            <li>Automatic gain for speaking quietly</li>
+            <li>Installer that downloads the model on first run</li>
+            <li>Text appearing while you speak</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>FlowSpeech is open source. Code at <a href="https://github.com/fmrgcarvalho/flowspeech">github.com/fmrgcarvalho/flowspeech</a>.</p>
+    <p>Third-party models: Parakeet TDT 0.6B v3 © NVIDIA (CC-BY-4.0), Whisper © OpenAI (MIT), Qwen 2.5 © Alibaba (Apache 2.0). Libraries: sherpa-onnx, whisper.cpp, llama.cpp, NAudio.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // Cada exemplo: o que se "ouve", o resultado só com regras, com IA e traduzido.
+  // Each sample: what is "heard", the rules-only result, with AI, and the "speak Portuguese, type English" case.
+  const samples = [
+    {
+      heard: "um hi team comma the meeting moves to thursday at three no at four full stop",
+      rules: "Hi team, the meeting moves to Thursday at three no at four.",
+      ai: "Hi team, the meeting moves to Thursday at four.",
+      ptHeard: "hum olá equipa vírgula a reunião passa para quinta às quatro ponto final",
+      en: "Hi team, the meeting moves to Thursday at four."
+    },
+    {
+      heard: "send the report to my email by tomorrow full stop",
+      rules: "Send the report to name@example.com by tomorrow.",
+      ai: "Send the report to name@example.com by tomorrow.",
+      ptHeard: "envia o relatório para o meu email até amanhã ponto final",
+      en: "Send the report to name@example.com by tomorrow."
+    },
+    {
+      heard: "uh can we review the pull request before the deploy question mark",
+      rules: "Can we review the pull request before the deploy?",
+      ai: "Can we review the pull request before the deploy?",
+      ptHeard: "ãh conseguimos rever o pull request antes do deploy ponto de interrogação",
+      en: "Can we review the pull request before the deploy?"
+    }
+  ];
+
+  const $ = id => document.getElementById(id);
+  const key = $("key"), pill = $("pill"), label = $("pillLabel"), heard = $("heard"),
+        editor = $("editor"), ai = $("ai"), en = $("en");
+  const bars = [...$("bars").children];
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const weights = [0.5, 0.8, 1, 0.8, 0.5];
+
+  let index = 0, recording = false, busy = false, wordTimer = 0, levelTimer = 0, words = [], shown = 0;
+
+  function setLevel(level) {
+    bars.forEach((b, i) => b.style.height = Math.max(4, Math.min(20, 4 + level * 18 * weights[i] * (0.8 + Math.random() * 0.4))) + "px");
+  }
+
+  function start() {
+    if (recording || busy) return;
+    recording = true;
+    key.setAttribute("aria-pressed", "true");
+    const s = samples[index];
+    words = (en.checked ? s.ptHeard : s.heard).split(" ");
+    shown = 0;
+    heard.textContent = "";
+    label.textContent = en.checked ? "Listening (PT) → EN" : "Listening…";
+    pill.classList.add("on", "rec");
+    wordTimer = setInterval(() => {
+      if (shown < words.length) heard.textContent = words.slice(Math.max(0, shown - 4), ++shown).join(" ");
+    }, reduced ? 60 : 170);
+    levelTimer = setInterval(() => setLevel(0.35 + Math.random() * 0.65), 90);
+  }
+
+  async function stop() {
+    if (!recording) return;
+    recording = false;
+    key.setAttribute("aria-pressed", "false");
+    clearInterval(wordTimer); clearInterval(levelTimer);
+    pill.classList.remove("rec");
+    setLevel(0.08);
+
+    // Released too early: just like the app, very short recordings are discarded.
+    if (shown < 3) { pill.classList.remove("on"); return; }
+
+    busy = true;
+    const s = samples[index];
+    index = (index + 1) % samples.length;
+    heard.textContent = "";
+    label.textContent = "Transcribing…";
+    await wait(380);
+    if (en.checked || ai.checked) { label.textContent = en.checked ? "Translating…" : "Cleaning up…"; await wait(600); }
+    label.textContent = "Typing…";
+    write(en.checked ? s.en : ai.checked ? s.ai : s.rules);
+    await wait(250);
+    pill.classList.remove("on");
+    busy = false;
+  }
+
+  function write(text) {
+    const caret = editor.querySelector(".caret");
+    const p = document.createElement("p");
+    const span = document.createElement("span");
+    span.className = "new";
+    span.textContent = text;
+    p.appendChild(span);
+    p.appendChild(caret);
+    editor.appendChild(p);
+    const paragraphs = editor.querySelectorAll("p");
+    if (paragraphs.length > 4) paragraphs[0].remove();
+    requestAnimationFrame(() => requestAnimationFrame(() => span.classList.add("settled")));
+  }
+
+  const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+
+  // Mouse, touch and pen: press and hold.
+  key.addEventListener("pointerdown", e => { e.preventDefault(); key.setPointerCapture(e.pointerId); start(); });
+  key.addEventListener("pointerup", stop);
+  key.addEventListener("pointercancel", stop);
+  // Keyboard on the button: hold Space/Enter.
+  key.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); start(); } });
+  key.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); stop(); } });
+  // The real right Ctrl key, anywhere on the page.
+  document.addEventListener("keydown", e => { if (e.code === "ControlRight" && !e.repeat) start(); });
+  document.addEventListener("keyup", e => { if (e.code === "ControlRight") stop(); });
+  window.addEventListener("blur", stop);
+
+  // Copy buttons for the commands.
+  document.querySelectorAll(".copy").forEach(btn => btn.addEventListener("click", async () => {
+    const code = btn.previousElementSibling.innerText;
+    try { await navigator.clipboard.writeText(code); btn.textContent = "Copied"; }
+    catch { btn.textContent = "Select and copy"; }
+    setTimeout(() => btn.textContent = "Copy", 1600);
+  }));
+})();
+</script>
+</body>
+</html>

@@ -1,140 +1,146 @@
 # FlowSpeech
 
+**English** · [Português](README.pt-PT.md)
+
 [![build](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml/badge.svg)](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml)
 
-Ditado por voz para Windows, **100% local e gratuito**.
-Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em qualquer aplicação
-(Outlook, Teams, Slack, VS Code, browser…). Nenhum áudio sai da máquina.
+Voice dictation for Windows, **100% local and free**.
+Hold a key, speak, let go: the text appears wherever the cursor is, in any application
+(Outlook, Teams, Slack, VS Code, your browser…). No audio ever leaves your machine.
 
-**Página do projeto, com demonstração interativa:** https://fmrgcarvalho.github.io/flowspeech/
+**Project page with an interactive demo:** https://fmrgcarvalho.github.io/flowspeech/en/
 
-> **Estado: em desenvolvimento (v0.1).** Ainda não há instalador — compila-se a partir do código.
-> O núcleo tem testes automáticos; a parte Windows e os motores de IA estão implementados e a ser
-> validados em máquinas reais. Problemas e sugestões: [Issues](https://github.com/fmrgcarvalho/flowspeech/issues).
+> **Status: in development (v0.1).** There is no installer yet — you build it from source.
+> The core has automated tests and CI builds the full Windows app; real-world testing on different
+> machines is ongoing. Bugs and ideas: [Issues](https://github.com/fmrgcarvalho/flowspeech/issues).
 
-## Atalhos
+## Shortcuts
 
-| Atalho | O que faz |
+| Shortcut | What it does |
 |---|---|
-| Manter **Ctrl direito** premido | Grava enquanto a tecla está premida; ao largar, escreve o texto |
-| **Dois toques** no Ctrl direito | Modo mãos-livres: grava sem segurar a tecla |
-| **Um toque** no Ctrl direito (em mãos-livres) | Pára e escreve o texto |
-| **Esc** | Cancela a gravação |
-| Ctrl direito **+ outra tecla** (ex.: Ctrl+C) | Cancela — é um atalho normal |
+| Hold **Right Ctrl** | Records while the key is held; types the text when you let go |
+| **Double-tap** Right Ctrl | Hands-free mode: records without holding the key |
+| **Tap** Right Ctrl (in hands-free mode) | Stops and types the text |
+| **Esc** | Cancels the recording |
+| Right Ctrl **+ another key** (e.g. Ctrl+C) | Cancels — it is a normal shortcut |
 
-A **limpeza com IA** e a **tradução para inglês** ligam-se e desligam-se no menu do ícone junto ao relógio
-(botão direito). A tecla muda-se em `Hotkey.VirtualKey` nas definições: `163` = Ctrl direito (omissão),
-`145` = Scroll Lock, `165` = Alt direito (evitar em teclado português — é o AltGr do @ e do €).
+**AI clean-up** and **translation to English** are switched on and off from the tray icon menu next to
+the clock (right-click). Change the key with `Hotkey.VirtualKey` in the settings: `163` = Right Ctrl
+(default), `145` = Scroll Lock, `165` = Right Alt (avoid on keyboards where it is AltGr).
 
-## Como funciona
-
-O que acontece por baixo:
+## How it works
 
 ```
- Tecla global ──► Microfone 16 kHz ──► Parakeet TDT 0.6B v3 ──► [Limpeza com IA] ──► Regras ──► Ctrl+V na app ativa
- (hook de teclado)    (NAudio)          (sherpa-onnx, local)     opcional, local     dicionário,  (clipboard reposto)
-                                                                 Qwen 2.5 1.5B       snippets
+ Global key ──► Microphone 16 kHz ──► Parakeet TDT 0.6B v3 ──► [AI clean-up] ──► Rules ──► Ctrl+V into the active app
+ (keyboard hook)    (NAudio)           (sherpa-onnx, local)     optional, local    dictionary,  (clipboard restored)
+                                                                 Qwen 2.5 1.5B      snippets
 ```
 
-## Motor de transcrição
+## Speech recognition engine
 
-Por omissão o FlowSpeech usa o **NVIDIA Parakeet TDT 0.6B v3** (licença CC-BY-4.0), executado localmente
-com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
+By default FlowSpeech uses **NVIDIA Parakeet TDT 0.6B v3** (CC-BY-4.0), running locally with
+[sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 
-- 25 línguas europeias, incluindo **português (treinado com português europeu)** e inglês
-- deteção automática da língua — podes alternar PT/EN sem mudar nada
-- pontuação e maiúsculas já vêm do modelo
-- muito rápido em CPU (versão int8), sem precisar de GPU
+- 25 European languages, including **English and Portuguese** (trained on European Portuguese)
+- automatic language detection — switch languages without changing anything
+- punctuation and capitalisation come from the model
+- very fast on CPU (int8 build), no GPU needed
 
-O **Whisper large-v3-turbo** (whisper.cpp) continua disponível como alternativa — útil para línguas fora
-das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI, desligado por omissão.
+**OpenAI Whisper large-v3-turbo** (whisper.cpp) is available as an alternative — useful for languages
+outside those 25 — and there is an adapter for OpenAI-compatible cloud APIs, off by default.
 
-## Falar em português, escrever em inglês (opcional)
+## Speak Portuguese, type English (optional)
 
-No menu do ícone → **Traduzir para inglês**. Falas em português e o texto é escrito em inglês na app
-onde estás. Aparece cerca de 1–2 s depois de largares a tecla, frase a frase (o overlay mostra **→ EN**).
+Tray menu → **Translate to English**. You speak Portuguese and the text is typed in English into the app
+you are using. It appears about 1–2 s after you let go of the key, one utterance at a time (the overlay
+shows **→ EN**).
 
-| Motor ativo | Quem traduz | Precisa de |
+| Active engine | Who translates | What you need |
 |---|---|---|
-| Whisper | O próprio Whisper (tarefa *translate* nativa) | Só o modelo Whisper |
-| Parakeet (omissão) | O modelo de IA local (Qwen 2.5), depois de transcrever | `download-model.ps1 -Engine ai` |
+| Whisper | Whisper itself (built-in *translate* task) | Only the Whisper model |
+| Parakeet (default) | The local AI model (Qwen 2.5), after transcribing | `download-model.ps1 -Engine ai` |
 
-Com o modelo de IA a língua de destino pode ser outra (`Translation.TargetLanguage`, ex.: `"French"`);
-o Whisper só traduz para inglês. Se a tradução falhar ou demorar mais de `Translation.TimeoutSeconds`,
-o texto é escrito no original e aparece um aviso — nunca passa português despercebido.
-Os snippets são procurados no texto final: com a tradução ligada, cria gatilhos em inglês (ex.: `"my email"`).
+With the AI model the target language can be something else (`Translation.TargetLanguage`, e.g.
+`"French"`); Whisper only translates into English. If translation fails or takes longer than
+`Translation.TimeoutSeconds`, the original text is typed and a warning is shown — Portuguese never slips
+through unnoticed. Snippets are matched against the final text: with translation on, add English triggers
+(e.g. `"my email"`).
 
-## Limpeza com IA (opcional)
+## AI clean-up (optional)
 
-Podes escolher entre dois modos, no menu do ícone → **Limpar texto com IA**:
+Two modes, from the tray menu → **Clean up text with AI**:
 
-| Modo | O que faz | Velocidade |
+| Mode | What it does | Speed |
 |---|---|---|
-| **Sem IA** (omissão) | Regras: tira "hum"/"ãh", pontuação ditada, dicionário, snippets | Instantâneo |
-| **Com IA** | Antes das regras, um modelo de linguagem local corrige o texto: resolve auto-correções ("às 3, não, às 4" → "às 4"), corrige gramática, formata listas e ajusta o tom à app (formal no Outlook, casual no Slack) | +0,5–2 s por ditação em CPU |
+| **No AI** (default) | Rules: removes "um"/"uh", spoken punctuation, dictionary, snippets | Instant |
+| **With AI** | Before the rules, a local language model fixes the text: resolves self-corrections ("at 3, no, at 4" → "at 4"), fixes grammar, formats lists and adapts the tone to the app (formal in Outlook, casual in Slack) | +0.5–2 s per dictation on CPU |
 
-O modelo é o **Qwen 2.5 1.5B Instruct** (GGUF Q4_K_M, ~1 GB, licença Apache 2.0), a correr dentro da própria
-app com llama.cpp — sem servidor nem instalações extra. Salvaguardas: se o modelo demorar mais do que
-`TimeoutSeconds`, faltar, ou devolver algo que não pareça uma limpeza (ex.: responder a uma pergunta ditada),
-o FlowSpeech escreve o texto sem IA. A ditação nunca fica bloqueada.
+The model is **Qwen 2.5 1.5B Instruct** (GGUF Q4_K_M, ~1 GB, Apache 2.0), running inside the app with
+llama.cpp — no server, nothing else to install. Safeguards: if the model is slower than `TimeoutSeconds`,
+missing, or returns something that does not look like a clean-up (e.g. it answers a question you
+dictated), FlowSpeech types the text without AI. Dictation never gets stuck.
 
 ```powershell
-./scripts/download-model.ps1 -Engine ai     # uma vez
+./scripts/download-model.ps1 -Engine ai     # once
 ```
 
-Para melhor qualidade em máquinas com mais RAM, qualquer modelo GGUF em formato ChatML serve
-(ex.: `qwen2.5-3b-instruct-q4_k_m.gguf`) — basta mudar `Formatting.Ai.ModelPath`.
+For better quality on machines with more RAM, any ChatML-format GGUF model works
+(e.g. `qwen2.5-3b-instruct-q4_k_m.gguf`) — just change `Formatting.Ai.ModelPath`.
 
-## Funcionalidades
+## Features
 
-| Funcionalidade | Estado | Notas |
+| Feature | Status | Notes |
 |---|---|---|
-| Ditado em qualquer app com atalho global | ✅ | Push-to-talk + mãos-livres |
-| Transcrição local rápida, PT-PT e EN | ✅ | Parakeet v3; Whisper como alternativa |
-| Remove "hum", "ãh" e hesitações | ✅ | Regras locais |
-| Pontuação e maiúsculas automáticas | ✅ | Modelo + regras; "vírgula", "ponto final", "nova linha" ditados |
-| Limpeza com IA local (auto-correções, gramática, tom) | ✅ | Opcional, interruptor no menu do ícone |
-| Falar em português e escrever em inglês | ✅ | Opcional, interruptor no menu; Whisper nativo ou IA local |
-| Dicionário pessoal (nomes, termos técnicos) | ✅ | Substituições aplicadas ao texto final |
-| Snippets ("o meu email" → endereço) | ✅ | `Snippets` em `settings.json` |
-| Estilo por aplicação (formal, casual, código) | ✅ | Regras básicas; tom completo com a IA ligada |
-| Histórico das ditações | ✅ | `history.jsonl` local |
-| Modo de comandos sobre texto selecionado | ⏳ | Roadmap |
-| Falar baixinho (ganho automático + VAD) | ⏳ | Roadmap |
+| Dictation into any app with a global key | ✅ | Hold-to-talk + hands-free |
+| Fast local speech recognition, EN and PT | ✅ | Parakeet v3; Whisper as an alternative |
+| Removes "um", "uh" and filler words | ✅ | Local rules |
+| Automatic punctuation and capitalisation | ✅ | Model + rules; spoken "comma", "full stop", "new line" |
+| Local AI clean-up (self-corrections, grammar, tone) | ✅ | Optional, tray menu switch |
+| Speak Portuguese, type English | ✅ | Optional, tray menu switch; native Whisper or local AI |
+| Personal dictionary (names, technical terms) | ✅ | Replacements applied to the final text |
+| Snippets ("my email" → full address) | ✅ | `Snippets` in `settings.json` |
+| Per-app style (formal, casual, code) | ✅ | Basic rules; full tone with AI on |
+| Dictation history | ✅ | Local `history.jsonl` |
+| Voice commands on selected text | ⏳ | Roadmap |
+| Quiet speech (auto gain + VAD) | ⏳ | Roadmap |
 
-Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
+Details in [docs/ROADMAP.md](docs/ROADMAP.md) (in Portuguese).
 
-## Requisitos
+## Requirements
 
 - Windows 10/11 x64
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (para compilar)
-- Disco: ~0,7 GB para o modelo de transcrição (+1 GB para a limpeza com IA / tradução)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (to build)
+- Disk: ~0.7 GB for the speech model (+1 GB for AI clean-up / translation)
 
-| Configuração | RAM usada pelo FlowSpeech (estimativa) | RAM do PC recomendada |
+| Setup | RAM used by FlowSpeech (estimate) | Recommended PC RAM |
 |---|---|---|
-| Só transcrição (Parakeet ou Whisper) | ~1–1,2 GB | 8 GB (funciona com 4 GB) |
-| Transcrição + limpeza com IA ou tradução | ~2,3–2,6 GB | 8 GB (mínimo ~6 GB) |
+| Speech recognition only (Parakeet or Whisper) | ~1–1.2 GB | 8 GB (works with 4 GB) |
+| Speech recognition + AI clean-up or translation | ~2.3–2.6 GB | 8 GB (minimum ~6 GB) |
 
-O modelo de IA só é carregado quando ligas a limpeza com IA ou a tradução.
+The AI model is only loaded when you turn on AI clean-up or translation.
 
-## Arranque rápido
+## Quick start
 
 ```powershell
 git clone https://github.com/fmrgcarvalho/flowspeech.git
 cd flowspeech
 
-# 1. Descarregar o modelo Parakeet (~0,7 GB, uma vez)
+# 1. Download the Parakeet model (~0.7 GB, once)
 ./scripts/download-model.ps1
 
-# 2. Correr
+# 2. Run
 dotnet run --project src/FlowSpeech.App
 ```
 
-Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl** premido e fala.
+An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
 
-## Configuração
+Every push to `main` also produces a ready-to-run build: open the latest successful run under
+[Actions](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml) and download the
+`FlowSpeech-win-x64` artifact (you still need to download the model with the script).
 
-`%AppData%\FlowSpeech\settings.json` (criado no 1.º arranque; menu do ícone → *Abrir definições* / *Recarregar definições*):
+## Configuration
+
+`%AppData%\FlowSpeech\settings.json` (created on first run; tray menu → *Open settings* / *Reload settings*):
 
 ```jsonc
 {
@@ -143,48 +149,49 @@ Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
     "ParakeetModelDir": "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
     "WhisperModelPath": "ggml-large-v3-turbo-q5_0.bin",
-    "Language": "auto"                         // só Whisper/cloud; o Parakeet deteta sozinho
+    "Language": "auto"                         // Whisper/cloud only; Parakeet detects it
   },
   "Formatting": {
     "RuleBasedCleanup": true,
     "Ai": { "Enabled": false, "ModelPath": "qwen2.5-1.5b-instruct-q4_k_m.gguf", "TimeoutSeconds": 6, "GpuLayers": 0 }
   },
   "Translation": { "Enabled": false, "TargetLanguage": "English", "TimeoutSeconds": 12 },
-  "Dictionary": { "flow speech": "FlowSpeech", "gaiao": "Gaião" },
-  "Snippets":   { "o meu email": "nome@exemplo.pt" },
+  "Dictionary": { "flow speech": "FlowSpeech", "dot net": ".NET" },
+  "Snippets":   { "my email": "name@example.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
-  "Injection": "Paste"                         // "Type" para apps que bloqueiam colar
+  "Injection": "Paste"                         // "Type" for apps that block pasting
 }
 ```
 
-Para usar o Whisper: `./scripts/download-model.ps1 -Engine whisper` e `"Engine": "whisper"`.
+To use Whisper: `./scripts/download-model.ps1 -Engine whisper` and `"Engine": "whisper"`.
 
-## Estrutura
+## Project structure
 
 ```
 flowspeech/
 ├── src/
-│   ├── FlowSpeech.Core/               # Domínio puro (net8.0): abstrações, pipeline, regras de texto, definições
-│   ├── FlowSpeech.Transcription/      # Motores: Parakeet (omissão), Whisper, API cloud
-│   ├── FlowSpeech.AiCleanup/          # Limpeza opcional com modelo de linguagem local (LLamaSharp)
-│   ├── FlowSpeech.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
-│   └── FlowSpeech.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
-├── tests/FlowSpeech.Core.Tests/       # Testes unitários do domínio (xUnit)
+│   ├── FlowSpeech.Core/               # Pure domain (net8.0): abstractions, pipeline, text rules, settings
+│   ├── FlowSpeech.Transcription/      # Engines: Parakeet (default), Whisper, cloud API
+│   ├── FlowSpeech.AiCleanup/          # Optional clean-up/translation with a local language model (LLamaSharp)
+│   ├── FlowSpeech.Platform.Windows/   # Win32: keyboard hook, microphone, text insertion, active app
+│   └── FlowSpeech.App/                # WPF: composition root, tray icon, overlay, hotkey controller
+├── tests/FlowSpeech.Core.Tests/       # Domain unit tests (xUnit)
 ├── scripts/download-model.ps1
-├── docs/                              # Página do projeto (GitHub Pages), arquitetura, roadmap e ADRs
-└── .github/workflows/build.yml        # CI em windows-latest: build, testes e publish
+├── docs/                              # Project page (PT at /, EN at /en), architecture, roadmap and ADRs
+└── .github/workflows/build.yml        # CI on windows-latest: build, tests and publish
 ```
 
-Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (in Portuguese).
 
-## Limitações conhecidas
+## Known limitations
 
-- Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o FlowSpeech também corra elevado.
-- A primeira ditação após o arranque pode demorar 1–2 s enquanto o modelo carrega.
-- O Parakeet não aceita vocabulário prévio; nomes próprios corrigem-se com o dicionário pessoal.
+- It cannot type into apps running **as Administrator** (Windows UIPI restriction) unless FlowSpeech also runs elevated.
+- The first dictation after start-up can take 1–2 s while the model loads.
+- Parakeet does not accept a custom vocabulary; fix proper names with the personal dictionary.
 
-## Licenças de terceiros
+## Third-party licences
 
 - Parakeet TDT 0.6B v3 — NVIDIA, CC-BY-4.0
+- Whisper — OpenAI, MIT
 - Qwen 2.5 1.5B Instruct — Alibaba, Apache 2.0
 - sherpa-onnx — Apache 2.0 · whisper.cpp / Whisper.net — MIT · llama.cpp / LLamaSharp — MIT · NAudio — MIT

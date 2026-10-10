@@ -11,11 +11,11 @@ public sealed class FlowSettings
     public FormattingSettings Formatting { get; set; } = new();
     public TranslationSettings Translation { get; set; } = new();
 
-    /// <summary>Substituições pessoais: "flow speech" → "FlowSpeech", "gaiao" → "Gaião".</summary>
+    /// <summary>Substituições pessoais: "flow speech" → "FlowSpeech", "dot net" → ".NET".</summary>
     public Dictionary<string, string> Dictionary { get; set; } = new(StringComparer.OrdinalIgnoreCase)
     {
         ["flow speech"] = "FlowSpeech",
-        ["gaiao"] = "Gaião"
+        ["dot net"] = ".NET"
     };
 
     /// <summary>Snippets: dizer o gatilho expande para o texto.</summary>
