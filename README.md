@@ -49,8 +49,8 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 ## Arranque rápido
 
 ```powershell
-git clone https://github.com/fmrgcarvalho/flowpt.git
-cd flowpt
+git clone https://github.com/fmrgcarvalho/flowspeech.git
+cd flowspeech
 
 # 1. Descarregar o modelo Whisper (~550 MB, uma vez)
 ./scripts/download-model.ps1
