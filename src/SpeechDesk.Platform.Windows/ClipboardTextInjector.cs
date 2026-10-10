@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 using SpeechDesk.Core.Abstractions;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using static SpeechDesk.Platform.Windows.Interop.NativeMethods;
 
@@ -48,8 +49,7 @@ public sealed class ClipboardTextInjector(Dispatcher dispatcher, Func<InjectionM
     {
         var sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
         if (sent != inputs.Length)
-            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),
-                "SendInput falhou (a app de destino pode estar a correr como Administrador).");
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), L.T("error.sendInput"));
     }
 
     private static void SetClipboardText(string text)

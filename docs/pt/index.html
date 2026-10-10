@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-PT">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SpeechDesk — local voice dictation for Windows</title>
-<meta name="description" content="Hold a key, speak, let go. Your words appear wherever the cursor is, in any Windows app. Free, open source and 100% local.">
+<title>SpeechDesk — ditado por voz local para Windows</title>
+<meta name="description" content="Mantém uma tecla premida, fala, larga. O texto aparece onde está o cursor, em qualquer aplicação do Windows. Grátis, open source e 100% local.">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="alternate" hreflang="pt-PT" href="https://fmrgcarvalho.github.io/speechdesk/">
+<link rel="alternate" hreflang="en" href="https://fmrgcarvalho.github.io/speechdesk/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
@@ -17,8 +17,8 @@
     --ink: #17202B;
     --muted: #556170;
     --line: #D3D9DF;
-    --live: #E0245E;      /* recording in progress */
-    --act: #0F7C7A;       /* actions and links */
+    --live: #E0245E;      /* gravação a decorrer */
+    --act: #0F7C7A;       /* ações e ligações */
     --act-ink: #FFFFFF;
     --key-top: #FAFBFC;
     --key-side: #B9C2CC;
@@ -51,7 +51,7 @@
   :focus-visible { outline: 3px solid var(--act); outline-offset: 3px; border-radius: 6px; }
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-  /* ---------- header ---------- */
+  /* ---------- topo ---------- */
   .top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
   .brand { display: flex; align-items: center; gap: 10px; font: 700 20px/1 var(--display); color: var(--ink); text-decoration: none; }
   .brand svg { width: 28px; height: 28px; }
@@ -128,7 +128,7 @@
   .switch input:checked { background: var(--act); }
   .switch input:checked::after { transform: translateX(18px); }
 
-  /* ---------- sections ---------- */
+  /* ---------- secções ---------- */
   section { padding: 84px 0; border-top: 1px solid var(--line); }
   h2 { font: 800 clamp(30px, 3.6vw, 44px)/1.08 var(--display); letter-spacing: -0.025em; margin: 0 0 14px; max-width: 18em; }
   .sub { color: var(--muted); max-width: 36em; margin: 0 0 40px; font-size: 19px; }
@@ -154,6 +154,12 @@
   .model ul { margin: 14px 0 0; padding-left: 18px; font-size: 16px; color: var(--muted); }
   .model li { margin-bottom: 4px; }
 
+  .downloads { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 860px; margin-bottom: 26px; }
+  .dl { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+  .dl p { margin: 6px 0 18px; color: var(--muted); font-size: 16px; }
+  .dl .btn { width: 100%; justify-content: center; }
+  .note { color: var(--muted); font-size: 15px; max-width: 46em; margin: 0 0 48px; }
+  @media (max-width: 700px) { .downloads { grid-template-columns: 1fr; } }
   .steps { counter-reset: s; list-style: none; margin: 0; padding: 0; max-width: 760px; }
   .steps li { counter-increment: s; position: relative; padding: 0 0 34px 58px; }
   .steps li::before {
@@ -208,182 +214,201 @@
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#17202B"/><rect x="6" y="12.5" width="3" height="7" rx="1.5" fill="#38BDF8"/><rect x="11" y="9.5" width="3" height="13" rx="1.5" fill="#38BDF8"/><rect x="16" y="6.5" width="3" height="19" rx="1.5" fill="#38BDF8"/><rect x="21" y="9.5" width="3" height="13" rx="1.5" fill="#38BDF8"/></svg>
       SpeechDesk
     </a>
-    <nav aria-label="Sections">
-      <a href="#features">Features</a>
-      <a href="#shortcuts">Shortcuts</a>
-      <a href="#install">Install</a>
+    <nav aria-label="Secções">
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#atalhos">Atalhos</a>
+      <a href="#download">Download</a>
       <a href="https://github.com/fmrgcarvalho/speechdesk">GitHub</a>
-      <a href="../" hreflang="pt-PT" lang="pt-PT">Português</a>
+      <a href="../" hreflang="en" lang="en">English</a>
     </nav>
   </header>
 
   <main>
     <div class="hero">
       <div>
-        <h1>Speak. Your words appear where the cursor is.</h1>
-        <p class="lede">Voice dictation for Windows that runs entirely on your PC. Hold a key, speak in English or Portuguese, let go — and the text is typed into Outlook, Teams, VS Code or any other app.</p>
+        <h1>Fala. O texto aparece onde está o cursor.</h1>
+        <p class="lede">Ditado por voz para Windows que corre inteiramente no teu PC. Mantém uma tecla premida, fala em português ou inglês, larga — e o texto é escrito no Outlook, no Teams, no VS Code ou em qualquer outra aplicação.</p>
         <div class="cta">
-          <a class="btn primary" href="#install">Install</a>
-          <a class="btn ghost" href="https://github.com/fmrgcarvalho/speechdesk">View the code</a>
+          <a class="btn primary" href="#download">Descarregar para Windows</a>
+          <a class="btn ghost" href="https://github.com/fmrgcarvalho/speechdesk">Ver o código</a>
         </div>
         <ul class="facts">
-          <li>Free and open source</li>
-          <li>No audio leaves your PC</li>
-          <li>Works offline</li>
+          <li>Grátis e open source</li>
+          <li>Nenhum áudio sai do PC</li>
+          <li>Funciona offline</li>
         </ul>
       </div>
 
-      <div class="demo" aria-label="Interactive demo">
+      <div class="demo" aria-label="Demonstração interativa">
         <div class="screen">
         <div class="window">
-          <div class="titlebar"><span class="app" aria-hidden="true"></span>New message — Outlook<span class="winbtns" aria-hidden="true"><i></i><i></i><i></i></span></div>
-          <div class="mailhead">To: <b>team@example.com</b> &nbsp; Subject: <b>Meeting</b></div>
+          <div class="titlebar"><span class="app" aria-hidden="true"></span>Nova mensagem — Outlook<span class="winbtns" aria-hidden="true"><i></i><i></i><i></i></span></div>
+          <div class="mailhead">Para: <b>equipa@exemplo.pt</b> &nbsp; Assunto: <b>Reunião</b></div>
           <div class="editor" id="editor" aria-live="polite"><span class="caret" aria-hidden="true"></span></div>
         </div>
         <div class="pill" id="pill" aria-hidden="true">
           <span class="bars" id="bars"><i></i><i></i><i></i><i></i><i></i></span>
-          <span id="pillLabel">Listening…</span>
+          <span id="pillLabel">A ouvir…</span>
           <span class="heard" id="heard"></span>
         </div>
         </div>
 
         <div class="controls">
-          <button class="key" id="key" type="button" aria-pressed="false" aria-describedby="keyHint">Ctrl<small>right</small></button>
-          <p class="hint" id="keyHint">Hold the key to “dictate” a sample sentence. Your real right Ctrl key works too.</p>
+          <button class="key" id="key" type="button" aria-pressed="false" aria-describedby="keyHint">Ctrl<small>direito</small></button>
+          <p class="hint" id="keyHint">Mantém a tecla premida para “ditar” uma frase de exemplo. Também funciona com o teu Ctrl direito.</p>
           <div class="toggles">
-            <label class="switch"><input type="checkbox" id="ai"> Clean up with AI</label>
-            <label class="switch"><input type="checkbox" id="en"> Translate to English</label>
+            <label class="switch"><input type="checkbox" id="ai"> Limpar texto com IA</label>
+            <label class="switch"><input type="checkbox" id="en"> Traduzir para inglês</label>
           </div>
         </div>
       </div>
     </div>
 
-    <section id="features" aria-labelledby="f-title">
-      <h2 id="f-title">Made for people who write all day</h2>
-      <p class="sub">It works in every Windows app, because SpeechDesk types wherever the cursor is — no integrations needed.</p>
+    <section id="funcionalidades" aria-labelledby="f-title">
+      <h2 id="f-title">Feito para quem escreve o dia todo</h2>
+      <p class="sub">Tudo funciona em qualquer aplicação do Windows, porque o SpeechDesk escreve onde está o cursor — não precisa de integrações.</p>
       <div class="features">
         <div>
-          <h3>English and Portuguese</h3>
-          <p>The speech model covers 25 European languages, including English and European Portuguese, and detects on its own when you switch mid-sentence.</p>
+          <h3>Português de Portugal</h3>
+          <p>O modelo de transcrição foi treinado com português europeu e percebe sozinho quando mudas para inglês a meio da conversa.</p>
         </div>
         <div>
-          <h3>Spoken punctuation</h3>
-          <p>Say “comma”, “full stop” or “new line” and you get the punctuation. The “um”s and “uh”s disappear.</p>
+          <h3>Pontuação ditada</h3>
+          <p>Diz “vírgula”, “ponto final” ou “nova linha” e sai a pontuação. Os “hum” e “ãh” desaparecem.</p>
         </div>
         <div>
-          <h3>Dictionary and snippets</h3>
-          <p>Teach it names and technical terms. Say “my email” and the full address appears.</p>
+          <h3>Dicionário e snippets</h3>
+          <p>Ensina-lhe nomes e termos técnicos. Diz “o meu email” e aparece o endereço completo.</p>
         </div>
         <div>
-          <h3>AI clean-up <span class="opt">optional</span></h3>
-          <p>When you correct yourself (“at 3, no, at 4”), only the final version stays. Fixes grammar and adapts the tone to the app.</p>
+          <h3>Limpeza com IA <span class="opt">opcional</span></h3>
+          <p>Quando te corriges (“às 3, não, às 4”), fica só a versão final. Corrige gramática e ajusta o tom à aplicação.</p>
         </div>
         <div>
-          <h3>Speak Portuguese, type English <span class="opt">optional</span></h3>
-          <p>Turn on translation in the menu and the text comes out in English, about one to two seconds after you let go of the key.</p>
+          <h3>Fala em português, escreve em inglês <span class="opt">opcional</span></h3>
+          <p>Liga a tradução no menu e o texto sai em inglês, cerca de um a dois segundos depois de largares a tecla.</p>
         </div>
         <div>
-          <h3>Private by default</h3>
-          <p>Transcription, clean-up and translation run on your processor. History stays in a local file.</p>
+          <h3>Privado por defeito</h3>
+          <p>A transcrição, a limpeza e a tradução correm no teu processador. O histórico fica num ficheiro local.</p>
         </div>
       </div>
     </section>
 
-    <section id="shortcuts" aria-labelledby="a-title">
-      <h2 id="a-title">Shortcuts</h2>
-      <p class="sub">A single key, and you can change it. AI clean-up and translation are switched on from the icon menu next to the clock.</p>
+    <section id="atalhos" aria-labelledby="a-title">
+      <h2 id="a-title">Atalhos</h2>
+      <p class="sub">Uma só tecla, configurável. A limpeza com IA e a tradução ligam-se no menu do ícone junto ao relógio.</p>
       <div class="table-scroll">
         <table>
-          <thead><tr><th scope="col">Shortcut</th><th scope="col">What it does</th></tr></thead>
+          <thead><tr><th scope="col">Atalho</th><th scope="col">O que faz</th></tr></thead>
           <tbody>
-            <tr><td>Hold <kbd>Right Ctrl</kbd></td><td>Records while the key is held; types the text when you let go.</td></tr>
-            <tr><td>Double-tap <kbd>Right Ctrl</kbd></td><td>Hands-free mode: records without holding the key.</td></tr>
-            <tr><td>Tap <kbd>Right Ctrl</kbd></td><td>In hands-free mode, stops and types the text.</td></tr>
-            <tr><td><kbd>Esc</kbd></td><td>Cancels the recording.</td></tr>
-            <tr><td><kbd>Right Ctrl</kbd> + another key</td><td>Cancels — it is a normal shortcut, like Ctrl+C.</td></tr>
+            <tr><td>Manter <kbd>Ctrl direito</kbd></td><td>Grava enquanto a tecla está premida; ao largar, escreve o texto.</td></tr>
+            <tr><td>Dois toques em <kbd>Ctrl direito</kbd></td><td>Modo mãos-livres: grava sem segurar a tecla.</td></tr>
+            <tr><td>Um toque em <kbd>Ctrl direito</kbd></td><td>Em mãos-livres, pára e escreve o texto.</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Cancela a gravação.</td></tr>
+            <tr><td><kbd>Ctrl direito</kbd> + outra tecla</td><td>Cancela — é um atalho normal, como Ctrl+C.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <section id="models" aria-labelledby="m-title">
-      <h2 id="m-title">Models that run on your PC</h2>
-      <p class="sub">Pick the engine in the settings. Models are downloaded once with a script.</p>
+    <section id="modelos" aria-labelledby="m-title">
+      <h2 id="m-title">Modelos que correm no teu PC</h2>
+      <p class="sub">Escolhes o motor nas definições. Os modelos descarregam-se uma vez com um script.</p>
       <div class="models">
         <div class="model">
-          <p class="role">Speech to text — default</p>
+          <p class="role">Transcrição — por defeito</p>
           <h3>NVIDIA Parakeet TDT 0.6B v3</h3>
           <ul>
-            <li>25 European languages, including English</li>
-            <li>Very fast on CPU</li>
-            <li>~0.7 GB · CC-BY-4.0 licence</li>
+            <li>25 línguas europeias, treino em PT-PT</li>
+            <li>Muito rápido em CPU</li>
+            <li>~0,7 GB · licença CC-BY-4.0</li>
           </ul>
         </div>
         <div class="model">
-          <p class="role">Speech to text — alternative</p>
+          <p class="role">Transcrição — alternativa</p>
           <h3>OpenAI Whisper large-v3-turbo</h3>
           <ul>
-            <li>99+ languages</li>
-            <li>Built-in translation to English</li>
-            <li>~0.55 GB · MIT licence</li>
+            <li>Mais de 99 línguas</li>
+            <li>Tradução nativa para inglês</li>
+            <li>~0,55 GB · licença MIT</li>
           </ul>
         </div>
         <div class="model">
-          <p class="role">Clean-up and translation — optional</p>
+          <p class="role">Limpeza e tradução — opcional</p>
           <h3>Qwen 2.5 1.5B Instruct</h3>
           <ul>
-            <li>Runs inside the app, no server</li>
-            <li>Turn it on or off from the menu</li>
-            <li>~1 GB · Apache 2.0 licence</li>
+            <li>Corre dentro da app, sem servidor</li>
+            <li>Ligas e desligas no menu</li>
+            <li>~1 GB · licença Apache 2.0</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <section id="install" aria-labelledby="i-title">
-      <h2 id="i-title">Install</h2>
-      <p class="sub">You need Windows 10 or 11 (x64), the <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 SDK</a> and 8 GB of RAM. Without AI, SpeechDesk uses about 1 GB; with AI, about 2.5 GB.</p>
+    <section id="download" aria-labelledby="d-title">
+      <h2 id="d-title">Download</h2>
+      <p class="sub">Para Windows 10 e 11 (64 bits). Não precisa de privilégios de administrador. No primeiro arranque o SpeechDesk oferece-se para descarregar o modelo de transcrição (cerca de 0,7 GB) — uma só vez.</p>
+      <div class="downloads">
+        <div class="dl">
+          <h3>Instalador</h3>
+          <p>Adiciona o SpeechDesk ao menu Iniciar, com a opção de arrancar com o Windows.</p>
+          <a class="btn primary" href="https://github.com/fmrgcarvalho/speechdesk/releases/latest/download/SpeechDesk-setup-win-x64.exe">Descarregar instalador (.exe)</a>
+        </div>
+        <div class="dl">
+          <h3>Portable</h3>
+          <p>Descomprime onde quiseres — numa pen ou numa pasta — e abre o SpeechDesk.exe. As definições e os modelos ficam ao lado da app.</p>
+          <a class="btn ghost" href="https://github.com/fmrgcarvalho/speechdesk/releases/latest/download/SpeechDesk-portable-win-x64.zip">Descarregar portable (.zip)</a>
+        </div>
+      </div>
+      <p class="note">O SpeechDesk ainda não tem assinatura digital, por isso o Windows SmartScreen pode mostrar um aviso na primeira vez. Escolhe “Mais informações” e depois “Executar mesmo assim”. Todas as versões estão na <a href="https://github.com/fmrgcarvalho/speechdesk/releases">página de releases</a>.</p>
+    </section>
+
+    <section id="instalar" aria-labelledby="i-title">
+      <h2 id="i-title">Compilar a partir do código</h2>
+      <p class="sub">Para quem desenvolve. Precisas de Windows 10 ou 11 (x64), do <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 SDK</a> e de 8 GB de RAM. Sem IA, o SpeechDesk usa cerca de 1 GB; com IA, cerca de 2,5 GB.</p>
       <ol class="steps">
         <li>
-          <h3>Get the code</h3>
+          <h3>Obter o código</h3>
           <div class="code"><pre><code>git clone https://github.com/fmrgcarvalho/speechdesk.git
-cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
+cd speechdesk</code></pre><button class="copy" type="button">Copiar</button></div>
         </li>
         <li>
-          <h3>Download the speech model</h3>
-          <p>Only once. Run it again with <code>-Engine ai</code> if you want AI clean-up, or translation with Parakeet.</p>
-          <div class="code"><pre><code>./scripts/download-model.ps1</code></pre><button class="copy" type="button">Copy</button></div>
+          <h3>Descarregar o modelo de transcrição</h3>
+          <p>Uma vez só. Junta <code>-Engine ai</code> se quiseres a limpeza com IA ou a tradução com o Parakeet.</p>
+          <div class="code"><pre><code>./scripts/download-model.ps1</code></pre><button class="copy" type="button">Copiar</button></div>
         </li>
         <li>
-          <h3>Start it</h3>
-          <p>An icon appears next to the clock. Open Notepad, hold Right Ctrl and speak.</p>
-          <div class="code"><pre><code>dotnet run --project src/SpeechDesk.App</code></pre><button class="copy" type="button">Copy</button></div>
+          <h3>Arrancar</h3>
+          <p>Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém o Ctrl direito premido e fala.</p>
+          <div class="code"><pre><code>dotnet run --project src/SpeechDesk.App</code></pre><button class="copy" type="button">Copiar</button></div>
         </li>
       </ol>
     </section>
 
-    <section id="status" aria-labelledby="e-title">
-      <h2 id="e-title">Project status</h2>
-      <p class="sub">SpeechDesk is in active development (version 0.1). There is no installer yet — you build it from source.</p>
+    <section id="estado" aria-labelledby="e-title">
+      <h2 id="e-title">Estado do projeto</h2>
+      <p class="sub">O SpeechDesk está em desenvolvimento ativo (versão 0.1). As primeiras versões podem ter arestas por limar — sugestões e problemas são bem-vindos nas Issues.</p>
       <div class="status">
         <div>
-          <h3>Available</h3>
+          <h3>Disponível</h3>
           <ul>
-            <li><strong>Dictation</strong> with hold-to-talk and hands-free mode</li>
-            <li><strong>Parakeet and Whisper</strong>, running locally</li>
-            <li><strong>Rules</strong>: filler words, spoken punctuation, dictionary, snippets</li>
-            <li>Optional <strong>AI clean-up</strong> and <strong>translation</strong></li>
-            <li>Local <strong>history</strong></li>
+            <li><strong>Ditado</strong> com tecla mantida e modo mãos-livres</li>
+            <li><strong>Parakeet e Whisper</strong> locais</li>
+            <li><strong>Regras</strong>: hesitações, pontuação ditada, dicionário, snippets</li>
+            <li><strong>Limpeza com IA</strong> e <strong>tradução</strong> opcionais</li>
+            <li><strong>Histórico</strong> local</li>
+            <li><strong>Instalador</strong> e versão <strong>portable</strong></li>
           </ul>
         </div>
         <div>
-          <h3>Coming next</h3>
+          <h3>A seguir</h3>
           <ul>
-            <li>Settings window and microphone selection</li>
-            <li>Voice commands on selected text</li>
-            <li>Automatic gain for speaking quietly</li>
-            <li>Installer that downloads the model on first run</li>
-            <li>Text appearing while you speak</li>
+            <li>Janela de definições e escolha do microfone</li>
+            <li>Comandos de voz sobre texto selecionado</li>
+            <li>Ganho automático para falar baixinho</li>
+            <li>Atualizações automáticas</li>
+            <li>Texto a aparecer enquanto falas</li>
           </ul>
         </div>
       </div>
@@ -393,35 +418,31 @@ cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
 
 <footer>
   <div class="wrap">
-    <p>SpeechDesk is open source. Code at <a href="https://github.com/fmrgcarvalho/speechdesk">github.com/fmrgcarvalho/speechdesk</a>.</p>
-    <p>Third-party models: Parakeet TDT 0.6B v3 © NVIDIA (CC-BY-4.0), Whisper © OpenAI (MIT), Qwen 2.5 © Alibaba (Apache 2.0). Libraries: sherpa-onnx, whisper.cpp, llama.cpp, NAudio.</p>
+    <p>SpeechDesk é open source. Código em <a href="https://github.com/fmrgcarvalho/speechdesk">github.com/fmrgcarvalho/speechdesk</a>.</p>
+    <p>Modelos de terceiros: Parakeet TDT 0.6B v3 © NVIDIA (CC-BY-4.0), Whisper © OpenAI (MIT), Qwen 2.5 © Alibaba (Apache 2.0). Bibliotecas: sherpa-onnx, whisper.cpp, llama.cpp, NAudio.</p>
   </div>
 </footer>
 
 <script>
 (() => {
   // Cada exemplo: o que se "ouve", o resultado só com regras, com IA e traduzido.
-  // Each sample: what is "heard", the rules-only result, with AI, and the "speak Portuguese, type English" case.
   const samples = [
     {
-      heard: "um hi team comma the meeting moves to thursday at three no at four full stop",
-      rules: "Hi team, the meeting moves to Thursday at three no at four.",
-      ai: "Hi team, the meeting moves to Thursday at four.",
-      ptHeard: "hum olá equipa vírgula a reunião passa para quinta às quatro ponto final",
+      heard: "hum olá equipa vírgula a reunião passa para quinta às três não às quatro ponto final",
+      rules: "Olá equipa, a reunião passa para quinta às três não às quatro.",
+      ai: "Olá equipa, a reunião passa para quinta às quatro.",
       en: "Hi team, the meeting moves to Thursday at four."
     },
     {
-      heard: "send the report to my email by tomorrow full stop",
-      rules: "Send the report to name@example.com by tomorrow.",
-      ai: "Send the report to name@example.com by tomorrow.",
-      ptHeard: "envia o relatório para o meu email até amanhã ponto final",
-      en: "Send the report to name@example.com by tomorrow."
+      heard: "envia o relatório para o meu email até amanhã ponto final",
+      rules: "Envia o relatório para nome@exemplo.pt até amanhã.",
+      ai: "Envia o relatório para nome@exemplo.pt até amanhã.",
+      en: "Send the report to nome@exemplo.pt by tomorrow."
     },
     {
-      heard: "uh can we review the pull request before the deploy question mark",
-      rules: "Can we review the pull request before the deploy?",
-      ai: "Can we review the pull request before the deploy?",
-      ptHeard: "ãh conseguimos rever o pull request antes do deploy ponto de interrogação",
+      heard: "ãh conseguimos rever o pull request antes do deploy ponto de interrogação",
+      rules: "Conseguimos rever o pull request antes do deploy?",
+      ai: "Conseguimos rever o pull request antes do deploy?",
       en: "Can we review the pull request before the deploy?"
     }
   ];
@@ -444,10 +465,10 @@ cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
     recording = true;
     key.setAttribute("aria-pressed", "true");
     const s = samples[index];
-    words = (en.checked ? s.ptHeard : s.heard).split(" ");
+    words = s.heard.split(" ");
     shown = 0;
     heard.textContent = "";
-    label.textContent = en.checked ? "Listening (PT) → EN" : "Listening…";
+    label.textContent = en.checked ? "A ouvir… → EN" : "A ouvir…";
     pill.classList.add("on", "rec");
     wordTimer = setInterval(() => {
       if (shown < words.length) heard.textContent = words.slice(Math.max(0, shown - 4), ++shown).join(" ");
@@ -463,17 +484,17 @@ cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
     pill.classList.remove("rec");
     setLevel(0.08);
 
-    // Released too early: just like the app, very short recordings are discarded.
+    // Largou cedo demais: tal como na app, gravações muito curtas são descartadas.
     if (shown < 3) { pill.classList.remove("on"); return; }
 
     busy = true;
     const s = samples[index];
     index = (index + 1) % samples.length;
     heard.textContent = "";
-    label.textContent = "Transcribing…";
+    label.textContent = "A transcrever…";
     await wait(380);
-    if (en.checked || ai.checked) { label.textContent = en.checked ? "Translating…" : "Cleaning up…"; await wait(600); }
-    label.textContent = "Typing…";
+    if (en.checked || ai.checked) { label.textContent = en.checked ? "A traduzir…" : "A limpar texto…"; await wait(600); }
+    label.textContent = "A escrever…";
     write(en.checked ? s.en : ai.checked ? s.ai : s.rules);
     await wait(250);
     pill.classList.remove("on");
@@ -496,24 +517,24 @@ cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
 
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
 
-  // Mouse, touch and pen: press and hold.
+  // Rato, toque e caneta: manter premido.
   key.addEventListener("pointerdown", e => { e.preventDefault(); key.setPointerCapture(e.pointerId); start(); });
   key.addEventListener("pointerup", stop);
   key.addEventListener("pointercancel", stop);
-  // Keyboard on the button: hold Space/Enter.
+  // Teclado no botão: Espaço/Enter mantidos.
   key.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); start(); } });
   key.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); stop(); } });
-  // The real right Ctrl key, anywhere on the page.
+  // O Ctrl direito verdadeiro, em qualquer ponto da página.
   document.addEventListener("keydown", e => { if (e.code === "ControlRight" && !e.repeat) start(); });
   document.addEventListener("keyup", e => { if (e.code === "ControlRight") stop(); });
   window.addEventListener("blur", stop);
 
-  // Copy buttons for the commands.
+  // Botões de copiar dos comandos.
   document.querySelectorAll(".copy").forEach(btn => btn.addEventListener("click", async () => {
     const code = btn.previousElementSibling.innerText;
-    try { await navigator.clipboard.writeText(code); btn.textContent = "Copied"; }
-    catch { btn.textContent = "Select and copy"; }
-    setTimeout(() => btn.textContent = "Copy", 1600);
+    try { await navigator.clipboard.writeText(code); btn.textContent = "Copiado"; }
+    catch { btn.textContent = "Seleciona e copia"; }
+    setTimeout(() => btn.textContent = "Copiar", 1600);
   }));
 })();
 </script>

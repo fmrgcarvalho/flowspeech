@@ -4,8 +4,11 @@ using SpeechDesk.Core.Models;
 
 namespace SpeechDesk.Core.Settings;
 
-public sealed class FlowSettings
+public sealed class AppSettings
 {
+    /// <summary>Interface language: "en" (default) or "pt".</summary>
+    public string UiLanguage { get; set; } = "en";
+
     public HotkeySettings Hotkey { get; set; } = new();
     public TranscriptionSettings Transcription { get; set; } = new();
     public FormattingSettings Formatting { get; set; } = new();
@@ -124,22 +127,29 @@ public static class SettingsStore
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public static string AppDataDir { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpeechDesk");
+    /// <summary>
+    /// Portable mode: a "portable.txt" file next to the executable keeps settings, history and models
+    /// in a "data" folder beside the app instead of %AppData%\SpeechDesk.
+    /// </summary>
+    public static bool IsPortable { get; } = File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.txt"));
+
+    public static string AppDataDir { get; } = IsPortable
+        ? Path.Combine(AppContext.BaseDirectory, "data")
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpeechDesk");
 
     public static string SettingsPath => Path.Combine(AppDataDir, "settings.json");
 
-    public static FlowSettings Load(string? path = null)
+    public static AppSettings Load(string? path = null)
     {
         path ??= SettingsPath;
         if (!File.Exists(path))
         {
-            var defaults = new FlowSettings();
+            var defaults = new AppSettings();
             Save(defaults, path);
             return defaults;
         }
 
-        var loaded = JsonSerializer.Deserialize<FlowSettings>(File.ReadAllText(path), Json) ?? new FlowSettings();
+        var loaded = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), Json) ?? new AppSettings();
         // Os dicionários desserializados perdem o comparador case-insensitive.
         loaded.Dictionary = new(loaded.Dictionary, StringComparer.OrdinalIgnoreCase);
         loaded.Snippets = new(loaded.Snippets, StringComparer.OrdinalIgnoreCase);
@@ -147,7 +157,7 @@ public static class SettingsStore
         return loaded;
     }
 
-    public static void Save(FlowSettings settings, string? path = null)
+    public static void Save(AppSettings settings, string? path = null)
     {
         path ??= SettingsPath;
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using SpeechDesk.Core.Abstractions;
 using SpeechDesk.Core.Audio;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using Whisper.net;
 
@@ -24,10 +25,9 @@ public sealed class WhisperLocalSpeechToText : ISpeechToText, IDisposable
         _factory = new Lazy<WhisperFactory>(() =>
         {
             if (!File.Exists(_modelPath))
-                throw new FileNotFoundException(
-                    $"Modelo Whisper não encontrado. Corre scripts/download-model.ps1. Caminho: {_modelPath}", _modelPath);
+                throw new FileNotFoundException(L.T("model.missing.whisper", _modelPath), _modelPath);
             return WhisperFactory.FromPath(_modelPath);
-        });
+        }, LazyThreadSafetyMode.PublicationOnly);
     }
 
     public string Name => $"whisper-local:{Path.GetFileNameWithoutExtension(_modelPath)}";

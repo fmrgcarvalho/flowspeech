@@ -17,7 +17,7 @@ public sealed class DictationPipeline
     private readonly ITextInjector _injector;
     private readonly IActiveAppProvider _activeApp;
     private readonly IHistoryStore? _history;
-    private readonly Func<FlowSettings> _settings;
+    private readonly Func<AppSettings> _settings;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     private DictationContext _context = DictationContext.Unknown;
@@ -30,7 +30,7 @@ public sealed class DictationPipeline
         IEnumerable<ITextFormatter> formatters,
         ITextInjector injector,
         IActiveAppProvider activeApp,
-        Func<FlowSettings> settings,
+        Func<AppSettings> settings,
         IHistoryStore? history = null)
     {
         _recorder = recorder;
@@ -160,7 +160,7 @@ public sealed class DictationPipeline
         language.Trim().ToLowerInvariant() is "en" or "english" or "inglês" or "ingles";
 
     /// <summary>Vocabulário pessoal enviado aos motores que aceitam prompt (Whisper, cloud).</summary>
-    internal static string? BuildPrompt(FlowSettings s)
+    internal static string? BuildPrompt(AppSettings s)
     {
         var words = s.Dictionary.Values.Distinct().Take(50).ToList();
         return words.Count == 0 ? null : string.Join(", ", words) + ".";

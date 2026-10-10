@@ -11,7 +11,7 @@ namespace SpeechDesk.Core.Text;
 /// Limpeza determinística, 100% local e instantânea: hesitações, pontuação falada,
 /// dicionário pessoal, snippets, espaçamento e maiúsculas.
 /// </summary>
-public sealed partial class RuleBasedFormatter(Func<FlowSettings> settings) : ITextFormatter
+public sealed partial class RuleBasedFormatter(Func<AppSettings> settings) : ITextFormatter
 {
     public string Name => "rules";
 

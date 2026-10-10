@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using SpeechDesk.AiCleanup;
 using SpeechDesk.Core.Abstractions;
 using SpeechDesk.Core.History;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Pipeline;
 using SpeechDesk.Core.Settings;
 using SpeechDesk.Core.Text;
@@ -13,29 +14,36 @@ using SpeechDesk.Transcription;
 
 namespace SpeechDesk.App;
 
-/// <summary>Composition root: liga as peças e arranca em segundo plano (só ícone na barra de tarefas).</summary>
+/// <summary>Composition root: wires everything up and runs in the background (tray icon only).</summary>
 public partial class App : Application
 {
     private Mutex? _singleInstance;
-    private FlowSettings _settings = new();
+    private AppSettings _settings = new();
     private TrayIcon? _tray;
     private LocalAiFormatter? _ai;
     private ISpeechToText? _stt;
-
-    /// <summary>A tradução só precisa do modelo de IA quando o motor não traduz sozinho (ex.: Parakeet).</summary>
-    private bool TranslationNeedsAi => _settings.Translation.Enabled && _stt?.CanTranslateToEnglish != true;
     private OverlayWindow? _overlay;
     private DictationController? _controller;
+    private ModelDownloader? _downloader;
+    private bool _downloading;
     private readonly List<IDisposable> _disposables = [];
 
-    protected override void OnStartup(StartupEventArgs e)
+    /// <summary>Translation only needs the AI model when the engine cannot translate by itself (e.g. Parakeet).</summary>
+    private bool TranslationNeedsAi => _settings.Translation.Enabled && _stt?.CanTranslateToEnglish != true;
+
+    private bool AiModelNeeded => _settings.Formatting.Ai.Enabled || TranslationNeedsAi;
+
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        _settings = SettingsStore.Load();
+        L.Language = _settings.UiLanguage;
 
         _singleInstance = new Mutex(true, @"Local\SpeechDesk.SingleInstance", out var isFirst);
         if (!isFirst)
         {
-            MessageBox.Show("O SpeechDesk já está a correr (ícone junto ao relógio).", "SpeechDesk");
+            MessageBox.Show(L.T("app.alreadyRunning"), "SpeechDesk");
             Shutdown();
             return;
         }
@@ -49,13 +57,13 @@ public partial class App : Application
             args.Handled = true;
         };
 
-        _settings = SettingsStore.Load();
-        Func<FlowSettings> settings = () => _settings;
+        Func<AppSettings> settings = () => _settings;
 
         var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-        var stt = CreateSpeechToText(_settings, http);
+        _downloader = new ModelDownloader(new HttpClient { Timeout = Timeout.InfiniteTimeSpan });
+        _stt = CreateSpeechToText(_settings, http);
 
-        // IA (opcional) primeiro, regras depois: o dicionário e os snippets têm sempre a última palavra.
+        // AI (optional) first, rules last: the dictionary and snippets always have the final say.
         _ai = new LocalAiFormatter(settings);
         _ai.LoadFailed += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
         _ai.Warning += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
@@ -68,7 +76,7 @@ public partial class App : Application
 
         var pipeline = new DictationPipeline(
             recorder,
-            stt,
+            _stt,
             formatters,
             new ClipboardTextInjector(Dispatcher, () => _settings.Injection),
             new ForegroundAppProvider(),
@@ -78,18 +86,25 @@ public partial class App : Application
         _overlay = new OverlayWindow { TranslationOn = _settings.Translation.Enabled };
         recorder.LevelChanged += (_, level) => Dispatcher.BeginInvoke(() => _overlay.SetLevel(level));
 
-        _stt = stt;
-        _tray = new TrayIcon(ReloadSettings, () => Shutdown(),
-            () => _settings.Formatting.Ai.Enabled, SetAiEnabled,
-            () => _settings.Translation.Enabled, SetTranslationEnabled);
+        _tray = new TrayIcon(new TrayActions(
+            ReloadSettings: ReloadSettings,
+            Exit: () => Shutdown(),
+            AiEnabled: () => _settings.Formatting.Ai.Enabled,
+            SetAiEnabled: enabled => _ = SetAiEnabledAsync(enabled),
+            TranslationEnabled: () => _settings.Translation.Enabled,
+            SetTranslationEnabled: enabled => _ = SetTranslationEnabledAsync(enabled),
+            Language: () => L.Language,
+            SetLanguage: SetLanguage,
+            DownloadModels: () => _ = EnsureModelsAsync(askFirst: false)));
         _controller = new DictationController(pipeline, hotkey, _overlay, _tray);
 
         hotkey.Start();
-        _ = _ai.WarmUpAsync(force: TranslationNeedsAi);
-        _tray.ShowInfo("SpeechDesk pronto. Mantém Right Ctrl premido para ditar; dois toques = mãos-livres.");
+        _tray.ShowInfo(L.T("app.ready"));
+
+        await EnsureModelsAsync(askFirst: true);
     }
 
-    private ISpeechToText CreateSpeechToText(FlowSettings s, HttpClient http)
+    private ISpeechToText CreateSpeechToText(AppSettings s, HttpClient http)
     {
         var t = s.Transcription;
         switch (t.Engine.ToLowerInvariant())
@@ -100,39 +115,89 @@ public partial class App : Application
             case TranscriptionEngines.Whisper:
                 var whisper = new WhisperLocalSpeechToText(SettingsStore.ResolveModelPath(t.WhisperModelPath), t.Threads);
                 _disposables.Add(whisper);
-                WarmUp(whisper.WarmUpAsync());
                 return whisper;
 
             default:
                 var parakeet = new ParakeetSpeechToText(SettingsStore.ResolveModelPath(t.ParakeetModelDir), t.Threads);
                 _disposables.Add(parakeet);
-                WarmUp(parakeet.WarmUpAsync());
                 return parakeet;
         }
     }
 
-    /// <summary>Carrega o modelo em background; se faltar, avisa logo em vez de na 1.ª ditação.</summary>
-    private void WarmUp(Task warmUp) =>
-        warmUp.ContinueWith(
-            t => Dispatcher.BeginInvoke(() => _tray?.ShowError(t.Exception!.GetBaseException().Message)),
-            TaskContinuationOptions.OnlyOnFaulted);
-
-    private void SetAiEnabled(bool enabled)
+    /// <summary>
+    /// Makes sure the models the current settings need are installed (offering to download them),
+    /// then loads them in the background so the first dictation is fast.
+    /// </summary>
+    private async Task EnsureModelsAsync(bool askFirst)
     {
-        _settings.Formatting.Ai.Enabled = enabled;
-        SettingsStore.Save(_settings);
-        if (enabled)
+        if (_downloading) return;
+
+        var speech = ModelCatalog.SpeechModelFor(_settings);
+        if (speech is not null && !await EnsureInstalledAsync(speech, askFirst)) return;
+        WarmUpSpeech();
+
+        if (AiModelNeeded && await EnsureInstalledAsync(ModelCatalog.Ai, askFirst))
+            _ = _ai?.WarmUpAsync(force: true);
+    }
+
+    private async Task<bool> EnsureInstalledAsync(ModelSpec spec, bool askFirst)
+    {
+        if (spec.IsInstalled(_settings)) return true;
+
+        if (askFirst)
         {
-            _tray?.ShowInfo("Limpeza com IA ligada. A carregar o modelo…");
-            _ = _ai?.WarmUpAsync();
+            var answer = MessageBox.Show(L.T(spec.AskKey), L.T("model.ask.title"),
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (answer != MessageBoxResult.Yes)
+            {
+                _tray?.ShowInfo(L.T("model.declined"));
+                return false;
+            }
         }
-        else
+
+        _downloading = true;
+        try
         {
-            _tray?.ShowInfo("Limpeza com IA desligada — só regras.");
+            var progress = new Progress<int>(p => _overlay?.ShowProgress(p));
+            await _downloader!.DownloadAsync(spec, _settings, progress);
+            _tray?.ShowInfo(L.T("model.downloaded", spec.DisplayName));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _tray?.ShowError(L.T("model.downloadFailed", ex.Message));
+            return false;
+        }
+        finally
+        {
+            _downloading = false;
+            _overlay?.HideProgress();
         }
     }
 
-    private void SetTranslationEnabled(bool enabled)
+    private void WarmUpSpeech()
+    {
+        var warmUp = _stt switch
+        {
+            ParakeetSpeechToText p => p.WarmUpAsync(),
+            WhisperLocalSpeechToText w => w.WarmUpAsync(),
+            _ => Task.CompletedTask
+        };
+        warmUp.ContinueWith(
+            t => Dispatcher.BeginInvoke(() => _tray?.ShowError(t.Exception!.GetBaseException().Message)),
+            TaskContinuationOptions.OnlyOnFaulted);
+    }
+
+    private async Task SetAiEnabledAsync(bool enabled)
+    {
+        _settings.Formatting.Ai.Enabled = enabled;
+        SettingsStore.Save(_settings);
+        _tray?.ShowInfo(L.T(enabled ? "ai.on" : "ai.off"));
+        if (enabled && await EnsureInstalledAsync(ModelCatalog.Ai, askFirst: true))
+            _ = _ai?.WarmUpAsync();
+    }
+
+    private async Task SetTranslationEnabledAsync(bool enabled)
     {
         _settings.Translation.Enabled = enabled;
         SettingsStore.Save(_settings);
@@ -140,26 +205,37 @@ public partial class App : Application
 
         if (!enabled)
         {
-            _tray?.ShowInfo("Tradução desligada — o texto sai na língua em que falas.");
+            _tray?.ShowInfo(L.T("translation.off"));
         }
         else if (TranslationNeedsAi)
         {
-            _tray?.ShowInfo($"Tradução para {_settings.Translation.TargetLanguage} ligada. A carregar o modelo de IA…");
-            _ = _ai?.WarmUpAsync(force: true);
+            _tray?.ShowInfo(L.T("translation.onAi", _settings.Translation.TargetLanguage));
+            if (await EnsureInstalledAsync(ModelCatalog.Ai, askFirst: true))
+                _ = _ai?.WarmUpAsync(force: true);
         }
         else
         {
-            _tray?.ShowInfo("Tradução para inglês ligada (feita pelo Whisper).");
+            _tray?.ShowInfo(L.T("translation.onWhisper"));
         }
+    }
+
+    private void SetLanguage(string language)
+    {
+        L.Language = language;
+        _settings.UiLanguage = L.Language;
+        SettingsStore.Save(_settings);
+        _tray?.ApplyLanguage();
+        _tray?.ShowInfo(L.T("app.languageChanged"));
     }
 
     private void ReloadSettings()
     {
         _settings = SettingsStore.Load();
-        _tray?.SyncToggles();
+        L.Language = _settings.UiLanguage;
+        _tray?.ApplyLanguage();
         if (_overlay is not null) _overlay.TranslationOn = _settings.Translation.Enabled;
-        _ = _ai?.WarmUpAsync(force: TranslationNeedsAi);
-        _tray?.ShowInfo("Definições recarregadas. (Mudar o motor ou o modelo requer reiniciar.)");
+        _tray?.ShowInfo(L.T("app.settingsReloaded"));
+        _ = EnsureModelsAsync(askFirst: true);
     }
 
     protected override void OnExit(ExitEventArgs e)

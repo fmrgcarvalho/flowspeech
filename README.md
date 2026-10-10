@@ -8,11 +8,23 @@ Voice dictation for Windows, **100% local and free**.
 Hold a key, speak, let go: the text appears wherever the cursor is, in any application
 (Outlook, Teams, Slack, VS Code, your browser…). No audio ever leaves your machine.
 
-**Project page with an interactive demo:** https://fmrgcarvalho.github.io/speechdesk/en/
+**Project page with an interactive demo:** https://fmrgcarvalho.github.io/speechdesk/
 
-> **Status: in development (v0.1).** There is no installer yet — you build it from source.
-> The core has automated tests and CI builds the full Windows app; real-world testing on different
-> machines is ongoing. Bugs and ideas: [Issues](https://github.com/fmrgcarvalho/speechdesk/issues).
+> **Status: early version (v0.1).** The core has automated tests and CI builds the full Windows app;
+> real-world testing on different machines is ongoing. Bugs and ideas: [Issues](https://github.com/fmrgcarvalho/speechdesk/issues).
+
+## Download
+
+| | |
+|---|---|
+| **[Installer (.exe)](https://github.com/fmrgcarvalho/speechdesk/releases/latest/download/SpeechDesk-setup-win-x64.exe)** | Start menu entry, optional start with Windows. No administrator rights needed. |
+| **[Portable (.zip)](https://github.com/fmrgcarvalho/speechdesk/releases/latest/download/SpeechDesk-portable-win-x64.zip)** | Unzip anywhere and run `SpeechDesk.exe`. Settings and models stay in a `data` folder next to the app. |
+
+Windows 10/11, 64-bit. On first start SpeechDesk offers to download the speech model (~0.7 GB, once).
+It is not code-signed yet, so SmartScreen may warn the first time: *More info → Run anyway*.
+All versions: [Releases](https://github.com/fmrgcarvalho/speechdesk/releases).
+
+The app is in **English by default**; switch to Portuguese from the tray menu → *Language*.
 
 ## Shortcuts
 
@@ -119,31 +131,29 @@ Details in [docs/ROADMAP.md](docs/ROADMAP.md) (in Portuguese).
 
 The AI model is only loaded when you turn on AI clean-up or translation.
 
-## Quick start
+## Build from source
 
 ```powershell
 git clone https://github.com/fmrgcarvalho/speechdesk.git
 cd speechdesk
 
-# 1. Download the Parakeet model (~0.7 GB, once)
-./scripts/download-model.ps1
-
-# 2. Run
-dotnet run --project src/SpeechDesk.App
+dotnet run --project src/SpeechDesk.App      # offers to download the model on first start
 ```
 
 An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
 
-Every push to `main` also produces a ready-to-run build: open the latest successful run under
-[Actions](https://github.com/fmrgcarvalho/speechdesk/actions/workflows/build.yml) and download the
-`SpeechDesk-win-x64` artifact (you still need to download the model with the script).
+`scripts/download-model.ps1` downloads the models from the command line instead (`-Engine whisper` or
+`-Engine ai` for the others). To publish a release with the installer and the portable zip, push a tag:
+`git tag v0.1.1 && git push origin v0.1.1` ([release workflow](.github/workflows/release.yml)).
 
 ## Configuration
 
-`%AppData%\SpeechDesk\settings.json` (created on first run; tray menu → *Open settings* / *Reload settings*):
+`%AppData%\SpeechDesk\settings.json` — or `data\settings.json` next to the app in the portable version
+(created on first run; tray menu → *Open settings* / *Reload settings*):
 
 ```jsonc
 {
+  "UiLanguage": "en",                          // "en" | "pt"
   "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300 },  // 163 = Right Ctrl
   "Transcription": {
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
@@ -176,9 +186,10 @@ speechdesk/
 │   ├── SpeechDesk.Platform.Windows/   # Win32: keyboard hook, microphone, text insertion, active app
 │   └── SpeechDesk.App/                # WPF: composition root, tray icon, overlay, hotkey controller
 ├── tests/SpeechDesk.Core.Tests/       # Domain unit tests (xUnit)
+├── installer/SpeechDesk.iss            # Installer (Inno Setup)
 ├── scripts/download-model.ps1
-├── docs/                              # Project page (PT at /, EN at /en), architecture, roadmap and ADRs
-└── .github/workflows/build.yml        # CI on windows-latest: build, tests and publish
+├── docs/                              # Project page (EN at /, PT at /pt), architecture, roadmap and ADRs
+└── .github/workflows/                 # build.yml (CI) and release.yml (installer + portable on tag)
 ```
 
 Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (in Portuguese).

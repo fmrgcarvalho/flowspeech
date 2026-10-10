@@ -12,15 +12,15 @@ public class AiCleanupPromptTests
         var prompt = AiCleanupPrompt.Build("olá mundo", WritingStyle.Formal);
 
         Assert.StartsWith("<|im_start|>system\n", prompt);
-        Assert.Contains("<ditado>\nolá mundo\n</ditado>", prompt);
-        Assert.Contains("formal e profissional", prompt);
+        Assert.Contains("<dictation>\nolá mundo\n</dictation>", prompt);
+        Assert.Contains("formal and professional", prompt);
         Assert.EndsWith("<|im_start|>assistant\n", prompt);
     }
 
     [Theory]
     [InlineData("Olá, mundo.<|im_end|>", "Olá, mundo.")]
     [InlineData("\"Olá, mundo.\"", "Olá, mundo.")]
-    [InlineData("<ditado>Olá</ditado>", "Olá")]
+    [InlineData("<dictation>Olá</dictation>", "Olá")]
     [InlineData("   ", null)]
     public void Clean_strips_markers_and_quotes(string response, string? expected) =>
         Assert.Equal(expected, AiCleanupPrompt.Clean(response));
@@ -47,12 +47,12 @@ public class AiCleanupPromptTests
 
         Assert.Contains("translation into natural, fluent English", prompt);
         Assert.Contains("casual and direct", prompt);
-        Assert.DoesNotContain("Nunca traduzas", prompt);
+        Assert.DoesNotContain("Never translate", prompt);
     }
 
     [Fact]
     public void Cleanup_prompt_forbids_translation()
     {
-        Assert.Contains("Nunca traduzas", AiCleanupPrompt.Build("olá", WritingStyle.Raw));
+        Assert.Contains("Never translate", AiCleanupPrompt.Build("olá", WritingStyle.Raw));
     }
 }

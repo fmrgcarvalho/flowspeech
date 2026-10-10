@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using SpeechDesk.Core.Abstractions;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using SherpaOnnx;
 
@@ -21,7 +22,8 @@ public sealed class ParakeetSpeechToText : ISpeechToText, IDisposable
     {
         _modelDir = modelDir;
         _threads = threads > 0 ? threads : Math.Clamp(Environment.ProcessorCount / 2, 2, 8);
-        _recognizer = new Lazy<OfflineRecognizer>(Create);
+        // PublicationOnly: um erro (ex.: modelo em falta) não fica em cache — depois do download volta a tentar.
+        _recognizer = new Lazy<OfflineRecognizer>(Create, LazyThreadSafetyMode.PublicationOnly);
     }
 
     public string Name => "parakeet-tdt-0.6b-v3";
@@ -57,8 +59,7 @@ public sealed class ParakeetSpeechToText : ISpeechToText, IDisposable
         {
             var path = Path.Combine(_modelDir, name);
             if (!System.IO.File.Exists(path))
-                throw new FileNotFoundException(
-                    $"Modelo Parakeet em falta. Corre scripts/download-model.ps1. Ficheiro: {path}", path);
+                throw new FileNotFoundException(L.T("model.missing.parakeet", path), path);
             return path;
         }
 

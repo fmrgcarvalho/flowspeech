@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 
 namespace SpeechDesk.App;
@@ -40,21 +41,21 @@ public partial class OverlayWindow : Window
             case DictationState.Recording:
                 // Largura fixada no início da gravação, antes de centrar; mantém-se até esconder.
                 Width = 200 + (handsFree ? 70 : 0) + (TranslationOn ? 50 : 0);
-                Label.Text = (handsFree ? "Mãos-livres · toca para parar" : "A ouvir…") + suffix;
+                Label.Text = L.T(handsFree ? "overlay.handsFree" : "overlay.listening") + suffix;
                 ShowAtBottom();
                 break;
             case DictationState.Transcribing:
-                Label.Text = "A transcrever…";
+                Label.Text = L.T("overlay.transcribing");
                 SetLevel(0.1f);
                 break;
             case DictationState.Formatting:
-                Label.Text = TranslationOn ? "A traduzir…" : "A limpar texto…";
+                Label.Text = L.T(TranslationOn ? "overlay.translating" : "overlay.cleaning");
                 break;
             case DictationState.Injecting:
-                Label.Text = "A escrever…";
+                Label.Text = L.T("overlay.typing");
                 break;
             case DictationState.Error:
-                Label.Text = "Erro — ver notificação";
+                Label.Text = L.T("overlay.error");
                 _ = HideAfterAsync(2000);
                 break;
             default:
@@ -62,6 +63,17 @@ public partial class OverlayWindow : Window
                 break;
         }
     }
+
+    /// <summary>Shows model download progress (percent, or -1 while unpacking).</summary>
+    public void ShowProgress(int percent)
+    {
+        Width = 270;
+        Label.Text = percent < 0 ? L.T("overlay.extracting") : L.T("overlay.downloading", percent);
+        SetLevel(percent < 0 ? 0.3f : percent / 100f);
+        ShowAtBottom();
+    }
+
+    public void HideProgress() => Hide();
 
     public void SetLevel(float level)
     {

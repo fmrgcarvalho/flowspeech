@@ -56,7 +56,7 @@ public class DictationPipelineTests
     private static (DictationPipeline Pipeline, FakeInjector Injector, FakeHistory History, FakeStt Stt) Build(
         string transcript, int durationMs = 1500, string process = "notepad")
     {
-        var settings = new FlowSettings();
+        var settings = new AppSettings();
         var injector = new FakeInjector();
         var history = new FakeHistory();
         var stt = new FakeStt(transcript);
@@ -134,7 +134,7 @@ public class DictationPipelineTests
 
     private static (FakeStt Stt, CapturingFormatter Formatter) RunWithTranslation(bool engineCanTranslate)
     {
-        var settings = new FlowSettings();
+        var settings = new AppSettings();
         settings.Translation.Enabled = true;
         var stt = new FakeStt("olá", engineCanTranslate);
         var formatter = new CapturingFormatter();

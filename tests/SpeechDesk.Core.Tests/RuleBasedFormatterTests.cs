@@ -7,9 +7,9 @@ namespace SpeechDesk.Core.Tests;
 
 public class RuleBasedFormatterTests
 {
-    private static RuleBasedFormatter Create(FlowSettings? s = null)
+    private static RuleBasedFormatter Create(AppSettings? s = null)
     {
-        s ??= new FlowSettings();
+        s ??= new AppSettings();
         return new RuleBasedFormatter(() => s);
     }
 
@@ -39,7 +39,7 @@ public class RuleBasedFormatterTests
     [Fact]
     public void Dictionary_does_not_replace_inside_other_words()
     {
-        var s = new FlowSettings();
+        var s = new AppSettings();
         s.Dictionary["api"] = "API";
         Assert.Equal("Rapidamente chamo a API", Create(s).Format("rapidamente chamo a api", WritingStyle.Raw));
     }

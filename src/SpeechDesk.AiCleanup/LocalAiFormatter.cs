@@ -1,5 +1,6 @@
 using System.Text;
 using SpeechDesk.Core.Abstractions;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using SpeechDesk.Core.Settings;
 using SpeechDesk.Core.Text;
@@ -14,7 +15,7 @@ namespace SpeechDesk.AiCleanup;
 /// Por omissão: Qwen 2.5 1.5B Instruct (GGUF Q4_K_M, ~1 GB).
 /// Nunca bloqueia a ditação: se estiver desligada, sem modelo, lenta ou com erro, devolve o texto recebido.
 /// </summary>
-public sealed class LocalAiFormatter(Func<FlowSettings> settings) : ITextFormatter, IDisposable
+public sealed class LocalAiFormatter(Func<AppSettings> settings) : ITextFormatter, IDisposable
 {
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private LLamaWeights? _weights;
@@ -60,7 +61,7 @@ public sealed class LocalAiFormatter(Func<FlowSettings> settings) : ITextFormatt
 
             var cleaned = AiCleanupPrompt.Clean(output.ToString());
             if (AiCleanupPrompt.IsPlausibleRewrite(text, cleaned)) return cleaned!;
-            if (translating) Warning?.Invoke(this, "A tradução não parecia correta — foi escrito o texto original.");
+            if (translating) Warning?.Invoke(this, L.T("translation.implausible"));
             return text;
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
@@ -68,8 +69,8 @@ public sealed class LocalAiFormatter(Func<FlowSettings> settings) : ITextFormatt
             // Erro ou timeout → texto sem IA. Na tradução avisa-se, para não passar português despercebido.
             if (translating)
                 Warning?.Invoke(this, ex is OperationCanceledException
-                    ? "A tradução demorou demasiado — foi escrito o texto original."
-                    : $"Não foi possível traduzir ({ex.Message}). Foi escrito o texto original.");
+                    ? L.T("translation.timeout")
+                    : L.T("translation.failed", ex.Message));
             return text;
         }
     }
@@ -100,8 +101,7 @@ public sealed class LocalAiFormatter(Func<FlowSettings> settings) : ITextFormatt
             if (_weights is not null && _params is not null && _loadedPath == path) return (_weights, _params);
 
             if (!File.Exists(path))
-                throw new FileNotFoundException(
-                    $"Modelo de IA em falta. Corre scripts/download-model.ps1 -Engine ai. Ficheiro: {path}", path);
+                throw new FileNotFoundException(L.T("model.missing.ai", path), path);
 
             _weights?.Dispose();
             _params = new ModelParams(path)

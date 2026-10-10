@@ -8,11 +8,23 @@ Ditado por voz para Windows, **100% local e gratuito**.
 Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em qualquer aplicação
 (Outlook, Teams, Slack, VS Code, browser…). Nenhum áudio sai da máquina.
 
-**Página do projeto, com demonstração interativa:** https://fmrgcarvalho.github.io/speechdesk/ ([versão em inglês](https://fmrgcarvalho.github.io/speechdesk/en/))
+**Página do projeto, com demonstração interativa:** https://fmrgcarvalho.github.io/speechdesk/pt/ ([versão em inglês](https://fmrgcarvalho.github.io/speechdesk/))
 
-> **Estado: em desenvolvimento (v0.1).** Ainda não há instalador — compila-se a partir do código.
-> O núcleo tem testes automáticos; a parte Windows e os motores de IA estão implementados e a ser
-> validados em máquinas reais. Problemas e sugestões: [Issues](https://github.com/fmrgcarvalho/speechdesk/issues).
+> **Estado: versão inicial (v0.1).** O núcleo tem testes automáticos e o CI compila a app Windows completa;
+> os testes em máquinas reais estão a decorrer. Problemas e sugestões: [Issues](https://github.com/fmrgcarvalho/speechdesk/issues).
+
+## Download
+
+| | |
+|---|---|
+| **[Instalador (.exe)](https://github.com/fmrgcarvalho/speechdesk/releases/latest/download/SpeechDesk-setup-win-x64.exe)** | Entrada no menu Iniciar, opção de arrancar com o Windows. Não precisa de administrador. |
+| **[Portable (.zip)](https://github.com/fmrgcarvalho/speechdesk/releases/latest/download/SpeechDesk-portable-win-x64.zip)** | Descomprime onde quiseres e abre o `SpeechDesk.exe`. Definições e modelos ficam numa pasta `data` ao lado da app. |
+
+Windows 10/11, 64 bits. No primeiro arranque o SpeechDesk oferece-se para descarregar o modelo de transcrição (~0,7 GB, uma vez).
+Ainda não tem assinatura digital, por isso o SmartScreen pode avisar na primeira vez: *Mais informações → Executar mesmo assim*.
+Todas as versões: [Releases](https://github.com/fmrgcarvalho/speechdesk/releases).
+
+A app está **em inglês por defeito**; muda para português no menu do ícone → *Language*.
 
 ## Atalhos
 
@@ -119,27 +131,29 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 
 O modelo de IA só é carregado quando ligas a limpeza com IA ou a tradução.
 
-## Arranque rápido
+## Compilar a partir do código
 
 ```powershell
 git clone https://github.com/fmrgcarvalho/speechdesk.git
 cd speechdesk
 
-# 1. Descarregar o modelo Parakeet (~0,7 GB, uma vez)
-./scripts/download-model.ps1
-
-# 2. Correr
-dotnet run --project src/SpeechDesk.App
+dotnet run --project src/SpeechDesk.App      # no primeiro arranque oferece-se para descarregar o modelo
 ```
 
-Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl** premido e fala.
+Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém o **Ctrl direito** premido e fala.
+
+O `scripts/download-model.ps1` descarrega os modelos pela linha de comandos (`-Engine whisper` ou
+`-Engine ai` para os outros). Para publicar uma release com o instalador e o portable, cria uma tag:
+`git tag v0.1.1 && git push origin v0.1.1` ([workflow de release](.github/workflows/release.yml)).
 
 ## Configuração
 
-`%AppData%\SpeechDesk\settings.json` (criado no 1.º arranque; menu do ícone → *Abrir definições* / *Recarregar definições*):
+`%AppData%\SpeechDesk\settings.json` — ou `data\settings.json` ao lado da app na versão portable
+(criado no 1.º arranque; menu do ícone → *Open settings* / *Reload settings*):
 
 ```jsonc
 {
+  "UiLanguage": "en",                          // "en" | "pt"
   "Hotkey": { "VirtualKey": 163, "DoubleTapMs": 350, "MinRecordingMs": 300 },  // 163 = Right Ctrl
   "Transcription": {
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
@@ -172,9 +186,10 @@ speechdesk/
 │   ├── SpeechDesk.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
 │   └── SpeechDesk.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
 ├── tests/SpeechDesk.Core.Tests/       # Testes unitários do domínio (xUnit)
+├── installer/SpeechDesk.iss            # Instalador (Inno Setup)
 ├── scripts/download-model.ps1
-├── docs/                              # Página do projeto (PT em /, EN em /en), arquitetura, roadmap e ADRs
-└── .github/workflows/build.yml        # CI em windows-latest: build, testes e publish
+├── docs/                              # Página do projeto (EN em /, PT em /pt), arquitetura, roadmap e ADRs
+└── .github/workflows/                 # build.yml (CI) e release.yml (instalador + portable ao criar uma tag)
 ```
 
 Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

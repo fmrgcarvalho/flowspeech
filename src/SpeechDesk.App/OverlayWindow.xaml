@@ -21,7 +21,7 @@
                 <Rectangle Width="4" Height="6" RadiusX="2" RadiusY="2" Fill="#38BDF8" Margin="2,0" VerticalAlignment="Center" />
             </StackPanel>
             <TextBlock x:Name="Label" Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"
-                       Foreground="#E5E7EB" FontFamily="Segoe UI" FontSize="13" Text="A ouvir…" />
+                       Foreground="#E5E7EB" FontFamily="Segoe UI" FontSize="13" Text="Listening…" />
         </Grid>
     </Border>
 </Window>

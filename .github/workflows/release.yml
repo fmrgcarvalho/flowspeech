@@ -1,0 +1,74 @@
+name: release
+
+# Publishes a GitHub Release with the installer and the portable zip.
+# Trigger: push a tag like v0.1.0, or run manually from the Actions tab.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g. 0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $v = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.version }}" } else { "${{ github.ref_name }}".TrimStart("v") }
+          "value=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Test
+        run: dotnet test tests/SpeechDesk.Core.Tests -c Release
+
+      - name: Publish (self-contained, win-x64)
+        run: >
+          dotnet publish src/SpeechDesk.App -c Release -r win-x64 --self-contained true
+          -p:Version=${{ steps.version.outputs.value }} -o publish
+
+      - name: Portable zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item -Recurse publish SpeechDesk
+          # This file switches the app to portable mode: settings and models live in .\data next to the exe.
+          Set-Content SpeechDesk\portable.txt "SpeechDesk portable: settings, history and models are stored in the 'data' folder next to SpeechDesk.exe."
+          Compress-Archive -Path SpeechDesk -DestinationPath dist\SpeechDesk-portable-win-x64.zip
+
+      - name: Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.value }} /DSourceDir=..\publish /DOutputDir=..\dist installer\SpeechDesk.iss
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          name: SpeechDesk ${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          body: |
+            **Early version (0.x)** — feedback welcome in Issues.
+
+            **Downloads**
+            - `SpeechDesk-setup-win-x64.exe` — installer (no administrator rights needed)
+            - `SpeechDesk-portable-win-x64.zip` — portable: unzip anywhere and run `SpeechDesk.exe`
+
+            On first start SpeechDesk offers to download the speech model (~0.7 GB).
+            The app is not code-signed yet, so Windows SmartScreen may warn: choose *More info → Run anyway*.
+          files: |
+            dist/SpeechDesk-setup-win-x64.exe
+            dist/SpeechDesk-portable-win-x64.zip

@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using SpeechDesk.Core.Abstractions;
 using SpeechDesk.Core.Audio;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Core.Models;
 using SpeechDesk.Core.Settings;
 
@@ -10,7 +11,7 @@ namespace SpeechDesk.Transcription;
 
 /// <summary>
 /// Adaptador para APIs compatíveis com OpenAI /v1/audio/transcriptions (OpenAI, Groq, Azure, servidores locais).
-/// Existe para comparação de qualidade/latência; está desativado por omissão ("Engine": "local").
+/// Existe para comparação de qualidade/latência; está desativado por omissão ("Engine": "parakeet").
 /// </summary>
 public sealed class CloudSpeechToText(HttpClient http, CloudSettings settings) : ISpeechToText
 {
@@ -19,7 +20,7 @@ public sealed class CloudSpeechToText(HttpClient http, CloudSettings settings) :
     public async Task<Transcript> TranscribeAsync(AudioClip clip, TranscriptionOptions options, CancellationToken ct = default)
     {
         var apiKey = Environment.GetEnvironmentVariable(settings.ApiKeyEnvVar)
-            ?? throw new InvalidOperationException($"Define a variável de ambiente {settings.ApiKeyEnvVar} com a chave da API.");
+            ?? throw new InvalidOperationException(L.T("error.cloudKey", settings.ApiKeyEnvVar));
 
         var sw = Stopwatch.StartNew();
         using var form = new MultipartFormDataContent();

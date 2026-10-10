@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using SpeechDesk.Core.Abstractions;
+using SpeechDesk.Core.Localization;
 using SpeechDesk.Platform.Windows.Interop;
 using static SpeechDesk.Platform.Windows.Interop.NativeMethods;
 
@@ -31,7 +32,7 @@ public sealed class LowLevelHotkeyListener : IHotkeyListener
         _doubleTapMs = doubleTapMs;
         _proc = HookCallback;
         _ui = SynchronizationContext.Current
-              ?? throw new InvalidOperationException("Criar o LowLevelHotkeyListener na thread de UI.");
+              ?? throw new InvalidOperationException("LowLevelHotkeyListener must be created on the UI thread.");
     }
 
     public event EventHandler? Pressed;
@@ -44,7 +45,7 @@ public sealed class LowLevelHotkeyListener : IHotkeyListener
         if (_hook != IntPtr.Zero) return;
         _hook = SetWindowsHookEx(WH_KEYBOARD_LL, _proc, GetModuleHandle(null), 0);
         if (_hook == IntPtr.Zero)
-            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "Falha ao instalar o hook de teclado.");
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), L.T("error.hook"));
     }
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
