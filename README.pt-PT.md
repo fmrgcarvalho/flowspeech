@@ -227,6 +227,13 @@ Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Os microfones de auscultadores Bluetooth perdem cerca de 1 s no início do primeiro ditado (os seguintes
   ficam bem enquanto o microfone está aberto).
 
+## Licença
+
+O SpeechDesk é software livre sob a [GNU GPL v3.0](LICENSE): qualquer pessoa o pode usar de graça — em casa
+ou no trabalho —, estudar, alterar e partilhar. Versões modificadas que sejam distribuídas têm de ser
+publicadas também sob a GPL, com o código-fonte. Para uma licença comercial (por exemplo, para integrar o
+SpeechDesk num produto de código fechado), contacta o autor. Contribuições: ver [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Licenças de terceiros
 
 - Parakeet TDT 0.6B v3 — NVIDIA, CC-BY-4.0

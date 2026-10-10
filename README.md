@@ -227,6 +227,13 @@ Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (in Portuguese).
 - Bluetooth headset microphones lose about 1 s at the start of the first dictation (the next ones are
   fine while the microphone stays open).
 
+## Licence
+
+SpeechDesk is free software under the [GNU GPL v3.0](LICENSE): anyone can use it for free — at home or at
+work — study it, change it and share it. Modified versions that are distributed must also be released
+under the GPL with their source code. For a commercial licence (e.g. to embed SpeechDesk in a closed-source
+product), contact the author. Contributions: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Third-party licences
 
 - Parakeet TDT 0.6B v3 — NVIDIA, CC-BY-4.0

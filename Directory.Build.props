@@ -9,5 +9,7 @@
     <Company>fmrgcarvalho</Company>
     <Product>SpeechDesk</Product>
     <Version>0.1.0</Version>
+    <Copyright>Copyright © Fábio Carvalho</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
 </Project>
