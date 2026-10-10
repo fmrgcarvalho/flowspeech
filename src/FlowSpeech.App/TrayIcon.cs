@@ -13,10 +13,21 @@ public sealed class TrayIcon : IDisposable
     private readonly Forms.ToolStripMenuItem _status;
     private readonly Forms.ToolStripMenuItem _aiToggle;
     private readonly Func<bool> _aiEnabled;
+    private readonly Forms.ToolStripMenuItem _translateToggle;
+    private readonly Func<bool> _translationEnabled;
 
-    public TrayIcon(Action reloadSettings, Action exit, Func<bool> aiEnabled, Action<bool> setAiEnabled)
+    public TrayIcon(
+        Action reloadSettings, Action exit,
+        Func<bool> aiEnabled, Action<bool> setAiEnabled,
+        Func<bool> translationEnabled, Action<bool> setTranslationEnabled)
     {
         _aiEnabled = aiEnabled;
+        _translationEnabled = translationEnabled;
+        _translateToggle = new Forms.ToolStripMenuItem("Traduzir para inglês") { CheckOnClick = true, Checked = translationEnabled() };
+        _translateToggle.CheckedChanged += (_, _) =>
+        {
+            if (_translateToggle.Checked != _translationEnabled()) setTranslationEnabled(_translateToggle.Checked);
+        };
         _status = new Forms.ToolStripMenuItem("Pronto") { Enabled = false };
         _aiToggle = new Forms.ToolStripMenuItem("Limpar texto com IA") { CheckOnClick = true, Checked = aiEnabled() };
         _aiToggle.CheckedChanged += (_, _) =>
@@ -28,6 +39,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_status);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(_aiToggle);
+        menu.Items.Add(_translateToggle);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Abrir definições", null, (_, _) => Open(SettingsStore.SettingsPath));
         menu.Items.Add("Recarregar definições", null, (_, _) => reloadSettings());
@@ -52,7 +64,11 @@ public sealed class TrayIcon : IDisposable
     }
 
     /// <summary>Atualiza o visto do menu depois de recarregar as definições.</summary>
-    public void SyncAiToggle() => _aiToggle.Checked = _aiEnabled();
+    public void SyncToggles()
+    {
+        _aiToggle.Checked = _aiEnabled();
+        _translateToggle.Checked = _translationEnabled();
+    }
 
     public void SetState(DictationState state)
     {
@@ -60,7 +76,7 @@ public sealed class TrayIcon : IDisposable
         {
             DictationState.Recording => "A gravar",
             DictationState.Transcribing => "A transcrever",
-            DictationState.Formatting => _aiEnabled() ? "A limpar com IA" : "A formatar",
+            DictationState.Formatting => _translationEnabled() ? "A traduzir" : _aiEnabled() ? "A limpar com IA" : "A formatar",
             DictationState.Injecting => "A escrever",
             DictationState.Error => "Erro",
             _ => "Pronto"

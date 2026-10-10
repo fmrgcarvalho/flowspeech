@@ -21,6 +21,7 @@ public sealed class DictationPipeline
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     private DictationContext _context = DictationContext.Unknown;
+    private bool _translateNatively;
     private DictationState _state = DictationState.Idle;
 
     public DictationPipeline(
@@ -64,7 +65,21 @@ public sealed class DictationPipeline
 
         // Capturar a app ativa ANTES de qualquer janela nossa ganhar foco.
         var ctx = _activeApp.GetCurrentContext();
-        _context = ctx with { Style = _settings().StyleFor(ctx.ProcessName) };
+        var s = _settings();
+        _translateNatively = false;
+        string? translateTo = null;
+        if (s.Translation.Enabled)
+        {
+            // Motor com tradução incorporada (Whisper → inglês) dispensa o modelo de IA.
+            _translateNatively = _stt.CanTranslateToEnglish && IsEnglish(s.Translation.TargetLanguage);
+            translateTo = _translateNatively ? null : s.Translation.TargetLanguage;
+        }
+        _context = ctx with
+        {
+            Style = s.StyleFor(ctx.ProcessName),
+            TranslateTo = translateTo,
+            IsTranslated = s.Translation.Enabled
+        };
 
         _recorder.Start();
         State = DictationState.Recording;
@@ -95,7 +110,8 @@ public sealed class DictationPipeline
             var sw = Stopwatch.StartNew();
             var transcript = await _stt.TranscribeAsync(clip, new TranscriptionOptions(
                 s.Transcription.Language,
-                BuildPrompt(s)), ct);
+                _translateNatively ? null : BuildPrompt(s),
+                _translateNatively), ct);
             var transcriptionTime = sw.Elapsed;
 
             State = DictationState.Formatting;
@@ -139,6 +155,9 @@ public sealed class DictationPipeline
         if (_recorder.IsRecording) _recorder.Stop();
         State = DictationState.Idle;
     }
+
+    internal static bool IsEnglish(string language) =>
+        language.Trim().ToLowerInvariant() is "en" or "english" or "inglês" or "ingles";
 
     /// <summary>Vocabulário pessoal enviado aos motores que aceitam prompt (Whisper, cloud).</summary>
     internal static string? BuildPrompt(FlowSettings s)

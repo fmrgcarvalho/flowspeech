@@ -7,6 +7,7 @@
 - [x] Limpeza por regras: hesitações, pontuação falada PT/EN, maiúsculas
 - [x] Dicionário pessoal e snippets
 - [x] Limpeza opcional com IA local (Qwen 2.5 1.5B via LLamaSharp), interruptor no menu
+- [x] Tradução PT → EN opcional (Whisper nativo ou IA local), interruptor no menu
 - [x] Inserção em qualquer app (paste com reposição do clipboard; modo digitação)
 - [x] Overlay com nível de áudio e estado; ícone na tray
 - [x] Histórico local em JSONL
@@ -31,4 +32,5 @@
 - [ ] Instalador (MSIX ou Velopack) com download do modelo no primeiro arranque
 - [ ] Arranque automático com o Windows
 - [ ] Atualizações automáticas
-- [ ] Transcrição em streaming (texto parcial enquanto fala)
+- [ ] Transcrição e tradução em streaming (texto parcial enquanto fala)
+- [ ] Atalho dedicado para ditar-e-traduzir sem mudar o interruptor

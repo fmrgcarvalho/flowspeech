@@ -20,6 +20,10 @@ public partial class App : Application
     private FlowSettings _settings = new();
     private TrayIcon? _tray;
     private LocalAiFormatter? _ai;
+    private ISpeechToText? _stt;
+
+    /// <summary>A tradução só precisa do modelo de IA quando o motor não traduz sozinho (ex.: Parakeet).</summary>
+    private bool TranslationNeedsAi => _settings.Translation.Enabled && _stt?.CanTranslateToEnglish != true;
     private OverlayWindow? _overlay;
     private DictationController? _controller;
     private readonly List<IDisposable> _disposables = [];
@@ -54,6 +58,7 @@ public partial class App : Application
         // IA (opcional) primeiro, regras depois: o dicionário e os snippets têm sempre a última palavra.
         _ai = new LocalAiFormatter(settings);
         _ai.LoadFailed += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
+        _ai.Warning += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
         _disposables.Add(_ai);
         var formatters = new List<ITextFormatter> { _ai, new RuleBasedFormatter(settings) };
 
@@ -70,14 +75,17 @@ public partial class App : Application
             settings,
             new JsonlHistoryStore(Path.Combine(SettingsStore.AppDataDir, "history.jsonl")));
 
-        _overlay = new OverlayWindow();
+        _overlay = new OverlayWindow { TranslationOn = _settings.Translation.Enabled };
         recorder.LevelChanged += (_, level) => Dispatcher.BeginInvoke(() => _overlay.SetLevel(level));
 
-        _tray = new TrayIcon(ReloadSettings, () => Shutdown(), () => _settings.Formatting.Ai.Enabled, SetAiEnabled);
+        _stt = stt;
+        _tray = new TrayIcon(ReloadSettings, () => Shutdown(),
+            () => _settings.Formatting.Ai.Enabled, SetAiEnabled,
+            () => _settings.Translation.Enabled, SetTranslationEnabled);
         _controller = new DictationController(pipeline, hotkey, _overlay, _tray);
 
         hotkey.Start();
-        _ = _ai.WarmUpAsync();
+        _ = _ai.WarmUpAsync(force: TranslationNeedsAi);
         _tray.ShowInfo("FlowSpeech pronto. Mantém Right Ctrl premido para ditar; dois toques = mãos-livres.");
     }
 
@@ -124,11 +132,33 @@ public partial class App : Application
         }
     }
 
+    private void SetTranslationEnabled(bool enabled)
+    {
+        _settings.Translation.Enabled = enabled;
+        SettingsStore.Save(_settings);
+        if (_overlay is not null) _overlay.TranslationOn = enabled;
+
+        if (!enabled)
+        {
+            _tray?.ShowInfo("Tradução desligada — o texto sai na língua em que falas.");
+        }
+        else if (TranslationNeedsAi)
+        {
+            _tray?.ShowInfo($"Tradução para {_settings.Translation.TargetLanguage} ligada. A carregar o modelo de IA…");
+            _ = _ai?.WarmUpAsync(force: true);
+        }
+        else
+        {
+            _tray?.ShowInfo("Tradução para inglês ligada (feita pelo Whisper).");
+        }
+    }
+
     private void ReloadSettings()
     {
         _settings = SettingsStore.Load();
-        _tray?.SyncAiToggle();
-        _ = _ai?.WarmUpAsync();
+        _tray?.SyncToggles();
+        if (_overlay is not null) _overlay.TranslationOn = _settings.Translation.Enabled;
+        _ = _ai?.WarmUpAsync(force: TranslationNeedsAi);
         _tray?.ShowInfo("Definições recarregadas. (Mudar o motor ou o modelo requer reiniciar.)");
     }
 

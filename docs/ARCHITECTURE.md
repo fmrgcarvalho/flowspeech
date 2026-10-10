@@ -48,6 +48,9 @@ Idle ──BeginRecording──► Recording ──EndRecording──► Transcr
 4. Se a limpeza com IA estiver ligada, o `LocalAiFormatter` corrige o texto com o Qwen 2.5 1.5B
    (timeout curto; resposta rejeitada se não parecer uma limpeza). Prompt e salvaguardas em
    `AiCleanupPrompt` (Core, testável).
+   Com a tradução ligada: se o motor traduz nativamente (Whisper → inglês), o pipeline pede-lhe o texto
+   já em inglês; caso contrário marca `DictationContext.TranslateTo` e o `LocalAiFormatter` traduz.
+   Em ambos os casos `IsTranslated` evita que as regras tratem "period"/"colon" como pontuação falada.
 5. Limpeza por regras (sempre por último, para o dicionário e os snippets terem a última palavra):
    hesitações, pontuação falada, dicionário, snippets, espaçamento, maiúsculas.
 6. Injeção: guarda o clipboard, cola, espera 250 ms, repõe o clipboard.

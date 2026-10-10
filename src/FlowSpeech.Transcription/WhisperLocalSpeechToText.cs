@@ -32,6 +32,9 @@ public sealed class WhisperLocalSpeechToText : ISpeechToText, IDisposable
 
     public string Name => $"whisper-local:{Path.GetFileNameWithoutExtension(_modelPath)}";
 
+    /// <summary>O Whisper traduz nativamente qualquer língua para inglês (tarefa "translate").</summary>
+    public bool CanTranslateToEnglish => true;
+
     /// <summary>Pré-carrega o modelo em background no arranque, para a 1.ª ditação ser rápida.</summary>
     public Task WarmUpAsync() => Task.Run(() => _ = _factory.Value);
 
@@ -47,6 +50,9 @@ public sealed class WhisperLocalSpeechToText : ISpeechToText, IDisposable
 
         if (!string.IsNullOrWhiteSpace(options.Prompt))
             builder = builder.WithPrompt(options.Prompt);
+
+        if (options.TranslateToEnglish)
+            builder = builder.WithTranslate();
 
         await using var processor = builder.Build();
         using var wav = new MemoryStream(WavEncoder.ToWav(clip));

@@ -28,12 +28,19 @@ public partial class OverlayWindow : Window
         };
     }
 
+    /// <summary>Mostra "→ EN" no overlay quando a tradução está ligada.</summary>
+    public bool TranslationOn { get; set; }
+
     public void SetState(DictationState state, bool handsFree)
     {
+        var suffix = TranslationOn ? "  → EN" : string.Empty;
+
         switch (state)
         {
             case DictationState.Recording:
-                Label.Text = handsFree ? "Mãos-livres · toca para parar" : "A ouvir…";
+                // Largura fixada no início da gravação, antes de centrar; mantém-se até esconder.
+                Width = 200 + (handsFree ? 70 : 0) + (TranslationOn ? 50 : 0);
+                Label.Text = (handsFree ? "Mãos-livres · toca para parar" : "A ouvir…") + suffix;
                 ShowAtBottom();
                 break;
             case DictationState.Transcribing:
@@ -41,7 +48,7 @@ public partial class OverlayWindow : Window
                 SetLevel(0.1f);
                 break;
             case DictationState.Formatting:
-                Label.Text = "A limpar texto…";
+                Label.Text = TranslationOn ? "A traduzir…" : "A limpar texto…";
                 break;
             case DictationState.Injecting:
                 Label.Text = "A escrever…";
@@ -54,7 +61,6 @@ public partial class OverlayWindow : Window
                 Hide();
                 break;
         }
-        Width = handsFree && state == DictationState.Recording ? 270 : 200;
     }
 
     public void SetLevel(float level)

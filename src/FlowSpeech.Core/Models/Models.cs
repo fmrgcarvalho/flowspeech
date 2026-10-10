@@ -12,7 +12,9 @@ public sealed record Transcript(string Text, string? Language, TimeSpan Elapsed)
 public sealed record TranscriptionOptions(
     string Language = "auto",
     /// <summary>Texto que orienta o modelo (vocabulário pessoal, nomes próprios).</summary>
-    string? Prompt = null);
+    string? Prompt = null,
+    /// <summary>Pedir ao motor que devolva já em inglês (só motores com tradução nativa).</summary>
+    bool TranslateToEnglish = false);
 
 public enum WritingStyle
 {
@@ -24,7 +26,14 @@ public enum WritingStyle
     Code
 }
 
-public sealed record DictationContext(string ProcessName, string WindowTitle, WritingStyle Style = WritingStyle.Raw)
+public sealed record DictationContext(
+    string ProcessName,
+    string WindowTitle,
+    WritingStyle Style = WritingStyle.Raw,
+    /// <summary>Língua para a qual os formatadores devem traduzir (null = manter a original).</summary>
+    string? TranslateTo = null,
+    /// <summary>True quando o texto final vai estar traduzido (pela IA ou pelo próprio motor).</summary>
+    bool IsTranslated = false)
 {
     public static DictationContext Unknown { get; } = new("unknown", string.Empty);
 }

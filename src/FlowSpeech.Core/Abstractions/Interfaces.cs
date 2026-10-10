@@ -18,6 +18,8 @@ public interface IAudioRecorder : IDisposable
 public interface ISpeechToText
 {
     string Name { get; }
+    /// <summary>True se o motor consegue devolver diretamente em inglês (ex.: Whisper "translate").</summary>
+    bool CanTranslateToEnglish => false;
     Task<Transcript> TranscribeAsync(AudioClip clip, TranscriptionOptions options, CancellationToken ct = default);
 }
 

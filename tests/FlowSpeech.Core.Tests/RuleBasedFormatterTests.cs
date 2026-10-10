@@ -74,4 +74,11 @@ public class RuleBasedFormatterTests
     [Fact]
     public void Empty_input_returns_empty() =>
         Assert.Equal(string.Empty, Create().Format("   ", WritingStyle.Raw));
+
+    [Fact]
+    public void Translated_text_keeps_english_words_like_period()
+    {
+        var result = Create().Format("the trial period ends on Friday.", WritingStyle.Raw, translated: true);
+        Assert.Equal("The trial period ends on Friday.", result);
+    }
 }

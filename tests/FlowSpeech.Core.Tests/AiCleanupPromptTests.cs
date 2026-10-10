@@ -39,4 +39,20 @@ public class AiCleanupPromptTests
         Assert.Equal(64, AiCleanupPrompt.MaxTokensFor(""));
         Assert.Equal(1024, AiCleanupPrompt.MaxTokensFor(new string('a', 10_000)));
     }
+
+    [Fact]
+    public void Translation_prompt_targets_requested_language()
+    {
+        var prompt = AiCleanupPrompt.Build("olá a todos", WritingStyle.Casual, "English");
+
+        Assert.Contains("translation into natural, fluent English", prompt);
+        Assert.Contains("casual and direct", prompt);
+        Assert.DoesNotContain("Nunca traduzas", prompt);
+    }
+
+    [Fact]
+    public void Cleanup_prompt_forbids_translation()
+    {
+        Assert.Contains("Nunca traduzas", AiCleanupPrompt.Build("olá", WritingStyle.Raw));
+    }
 }

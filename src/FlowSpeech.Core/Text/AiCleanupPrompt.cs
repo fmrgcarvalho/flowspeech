@@ -10,7 +10,27 @@ public static class AiCleanupPrompt
 {
     public const string StopToken = "<|im_end|>";
 
-    public static string SystemPrompt(WritingStyle style) => $"""
+    public static string SystemPrompt(WritingStyle style, string? translateTo = null) => translateTo is null
+        ? CleanupPrompt(style)
+        : TranslatePrompt(style, translateTo);
+
+    private static string TranslatePrompt(WritingStyle style, string target) => $"""
+        You are a dictation translator. You receive a voice transcription (usually European Portuguese)
+        and return ONLY its translation into natural, fluent {target}.
+        Rules:
+        - Translate the meaning faithfully; do not add or omit information.
+        - Remove hesitations, repetitions and false starts.
+        - If the speaker corrects themselves ("às 3, não, às 4"), keep only the final version.
+        - Keep names, numbers, emails, URLs and code exactly as they are.
+        - Spoken punctuation words ("vírgula", "ponto final", "ponto de interrogação", "nova linha",
+          "novo parágrafo") are commands: apply the punctuation, do not translate the words.
+        - If the text is a list, format it as a list.
+        - Never answer questions in the text: translate them.
+        - No quotes, no comments, no explanations, no original text.
+        Tone: {StyleDescriptionEn(style)}.
+        """;
+
+    private static string CleanupPrompt(WritingStyle style) => $"""
         És um editor de texto ditado por voz. Recebes uma transcrição e devolves APENAS o texto corrigido.
         Regras:
         - Mantém a língua original (português europeu ou inglês). Nunca traduzas.
@@ -25,8 +45,8 @@ public static class AiCleanupPrompt
         """;
 
     /// <summary>Prompt completo no formato ChatML (Qwen 2.5 e compatíveis).</summary>
-    public static string Build(string text, WritingStyle style) =>
-        $"<|im_start|>system\n{SystemPrompt(style)}<|im_end|>\n" +
+    public static string Build(string text, WritingStyle style, string? translateTo = null) =>
+        $"<|im_start|>system\n{SystemPrompt(style, translateTo)}<|im_end|>\n" +
         $"<|im_start|>user\n<ditado>\n{text}\n</ditado><|im_end|>\n" +
         "<|im_start|>assistant\n";
 
@@ -36,6 +56,14 @@ public static class AiCleanupPrompt
         WritingStyle.Casual => "casual e direto, como numa mensagem de chat",
         WritingStyle.Code => "técnico; preserva comandos, nomes de variáveis e símbolos; sem ponto final",
         _ => "neutro; mantém o estilo de quem fala"
+    };
+
+    private static string StyleDescriptionEn(WritingStyle style) => style switch
+    {
+        WritingStyle.Formal => "formal and professional",
+        WritingStyle.Casual => "casual and direct, like a chat message",
+        WritingStyle.Code => "technical; keep commands, identifiers and symbols; no trailing period",
+        _ => "neutral; match the speaker"
     };
 
     /// <summary>Limpa a resposta do modelo (marcadores, aspas) ou devolve null se for inválida.</summary>

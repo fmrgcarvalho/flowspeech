@@ -10,7 +10,7 @@ using LLama.Sampling;
 namespace FlowSpeech.AiCleanup;
 
 /// <summary>
-/// Limpeza opcional com um modelo de linguagem pequeno a correr dentro da app (llama.cpp via LLamaSharp).
+/// Limpeza e tradução opcionais com um modelo de linguagem pequeno a correr dentro da app (llama.cpp via LLamaSharp).
 /// Por omissão: Qwen 2.5 1.5B Instruct (GGUF Q4_K_M, ~1 GB).
 /// Nunca bloqueia a ditação: se estiver desligada, sem modelo, lenta ou com erro, devolve o texto recebido.
 /// </summary>
@@ -28,17 +28,22 @@ public sealed class LocalAiFormatter(Func<FlowSettings> settings) : ITextFormatt
 
     public bool IsEnabled => settings().Formatting.Ai.Enabled;
 
+    /// <summary>Avisos não fatais (ex.: tradução falhou e foi escrito o original).</summary>
+    public event EventHandler<string>? Warning;
+
     public async Task<string> FormatAsync(string text, DictationContext context, CancellationToken ct = default)
     {
-        var ai = settings().Formatting.Ai;
-        if (!ai.Enabled || string.IsNullOrWhiteSpace(text)) return text;
+        var s = settings();
+        var translating = context.TranslateTo is not null;
+        if ((!s.Formatting.Ai.Enabled && !translating) || string.IsNullOrWhiteSpace(text)) return text;
 
+        var seconds = translating ? s.Translation.TimeoutSeconds : s.Formatting.Ai.TimeoutSeconds;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, ai.TimeoutSeconds)));
+        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, seconds)));
 
         try
         {
-            var (weights, parameters) = await EnsureLoadedAsync(ai, timeout.Token);
+            var (weights, parameters) = await EnsureLoadedAsync(s.Formatting.Ai, timeout.Token);
 
             var executor = new StatelessExecutor(weights, parameters);
             var inference = new InferenceParams
@@ -48,24 +53,32 @@ public sealed class LocalAiFormatter(Func<FlowSettings> settings) : ITextFormatt
                 SamplingPipeline = new DefaultSamplingPipeline { Temperature = 0.1f }
             };
 
+            var prompt = AiCleanupPrompt.Build(text, context.Style, context.TranslateTo);
             var output = new StringBuilder();
-            await foreach (var token in executor.InferAsync(AiCleanupPrompt.Build(text, context.Style), inference, timeout.Token))
+            await foreach (var token in executor.InferAsync(prompt, inference, timeout.Token))
                 output.Append(token);
 
             var cleaned = AiCleanupPrompt.Clean(output.ToString());
-            return AiCleanupPrompt.IsPlausibleRewrite(text, cleaned) ? cleaned! : text;
+            if (AiCleanupPrompt.IsPlausibleRewrite(text, cleaned)) return cleaned!;
+            if (translating) Warning?.Invoke(this, "A tradução não parecia correta — foi escrito o texto original.");
+            return text;
         }
-        catch (Exception) when (!ct.IsCancellationRequested)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            return text; // timeout ou erro → texto sem IA
+            // Erro ou timeout → texto sem IA. Na tradução avisa-se, para não passar português despercebido.
+            if (translating)
+                Warning?.Invoke(this, ex is OperationCanceledException
+                    ? "A tradução demorou demasiado — foi escrito o texto original."
+                    : $"Não foi possível traduzir ({ex.Message}). Foi escrito o texto original.");
+            return text;
         }
     }
 
     /// <summary>Carrega o modelo em background (no arranque ou quando é ligado no menu).</summary>
-    public async Task WarmUpAsync()
+    public async Task WarmUpAsync(bool force = false)
     {
         var ai = settings().Formatting.Ai;
-        if (!ai.Enabled) return;
+        if (!ai.Enabled && !force) return;
         try
         {
             await EnsureLoadedAsync(ai, CancellationToken.None);

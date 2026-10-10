@@ -33,6 +33,21 @@ com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 O **Whisper large-v3-turbo** (whisper.cpp) continua disponível como alternativa — útil para línguas fora
 das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI, desligado por omissão.
 
+## Falar em português, escrever em inglês (opcional)
+
+No menu do ícone → **Traduzir para inglês**. Falas em português e o texto é escrito em inglês na app
+onde estás. Aparece cerca de 1–2 s depois de largares a tecla, frase a frase (o overlay mostra **→ EN**).
+
+| Motor ativo | Quem traduz | Precisa de |
+|---|---|---|
+| Whisper | O próprio Whisper (tarefa *translate* nativa) | Só o modelo Whisper |
+| Parakeet (omissão) | O modelo de IA local (Qwen 2.5), depois de transcrever | `download-model.ps1 -Engine ai` |
+
+Com o modelo de IA a língua de destino pode ser outra (`Translation.TargetLanguage`, ex.: `"French"`);
+o Whisper só traduz para inglês. Se a tradução falhar ou demorar mais de `Translation.TimeoutSeconds`,
+o texto é escrito no original e aparece um aviso — nunca passa português despercebido.
+Os snippets são procurados no texto final: com a tradução ligada, cria gatilhos em inglês (ex.: `"my email"`).
+
 ## Limpeza com IA (opcional)
 
 Podes escolher entre dois modos, no menu do ícone → **Limpar texto com IA**:
@@ -63,6 +78,7 @@ Para melhor qualidade em máquinas com mais RAM, qualquer modelo GGUF em formato
 | Remove "hum", "ãh" e hesitações | ✅ | Regras locais |
 | Pontuação e maiúsculas automáticas | ✅ | Modelo + regras; "vírgula", "ponto final", "nova linha" ditados |
 | Limpeza com IA local (auto-correções, gramática, tom) | ✅ | Opcional, interruptor no menu do ícone |
+| Falar em português e escrever em inglês | ✅ | Opcional, interruptor no menu; Whisper nativo ou IA local |
 | Dicionário pessoal (nomes, termos técnicos) | ✅ | Substituições aplicadas ao texto final |
 | Snippets ("o meu email" → endereço) | ✅ | `Snippets` em `settings.json` |
 | Estilo por aplicação (formal, casual, código) | ✅ | Regras básicas; tom completo com a IA ligada |
@@ -110,6 +126,7 @@ Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl
     "RuleBasedCleanup": true,
     "Ai": { "Enabled": false, "ModelPath": "qwen2.5-1.5b-instruct-q4_k_m.gguf", "TimeoutSeconds": 6, "GpuLayers": 0 }
   },
+  "Translation": { "Enabled": false, "TargetLanguage": "English", "TimeoutSeconds": 12 },
   "Dictionary": { "flow speech": "FlowSpeech", "gaiao": "Gaião" },
   "Snippets":   { "o meu email": "mgaiao25@gmail.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },

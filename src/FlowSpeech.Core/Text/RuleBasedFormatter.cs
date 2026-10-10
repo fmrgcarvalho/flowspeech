@@ -16,16 +16,19 @@ public sealed partial class RuleBasedFormatter(Func<FlowSettings> settings) : IT
     public string Name => "rules";
 
     public Task<string> FormatAsync(string text, DictationContext context, CancellationToken ct = default)
-        => Task.FromResult(Format(text, context.Style));
+        => Task.FromResult(Format(text, context.Style, context.IsTranslated));
 
-    public string Format(string text, WritingStyle style)
+    /// <param name="translated">
+    /// Texto já traduzido: não se aplica a pontuação falada (em inglês "period" ou "colon" são palavras normais).
+    /// </param>
+    public string Format(string text, WritingStyle style, bool translated = false)
     {
         var s = settings();
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
         if (!s.Formatting.RuleBasedCleanup) return text.Trim();
 
         var result = RemoveFillers(text);
-        result = ApplySpokenPunctuation(result);
+        if (!translated) result = ApplySpokenPunctuation(result);
         result = ApplyReplacements(result, s.Dictionary);
         result = ApplyReplacements(result, s.Snippets);
         result = NormalizeSpacing(result);

@@ -22,9 +22,10 @@ public class DictationPipelineTests
         public void Dispose() { }
     }
 
-    private sealed class FakeStt(string text) : ISpeechToText
+    private sealed class FakeStt(string text, bool canTranslate = false) : ISpeechToText
     {
         public string Name => "fake";
+        public bool CanTranslateToEnglish => canTranslate;
         public TranscriptionOptions? LastOptions { get; private set; }
         public Task<Transcript> TranscribeAsync(AudioClip clip, TranscriptionOptions options, CancellationToken ct = default)
         {
@@ -118,5 +119,51 @@ public class DictationPipelineTests
         Assert.False(pipeline.IsRecording);
         Assert.Empty(injector.Injected);
         Assert.Equal(DictationState.Idle, pipeline.State);
+    }
+
+    private sealed class CapturingFormatter : ITextFormatter
+    {
+        public string Name => "capture";
+        public DictationContext? Context { get; private set; }
+        public Task<string> FormatAsync(string text, DictationContext context, CancellationToken ct = default)
+        {
+            Context = context;
+            return Task.FromResult(text);
+        }
+    }
+
+    private static (FakeStt Stt, CapturingFormatter Formatter) RunWithTranslation(bool engineCanTranslate)
+    {
+        var settings = new FlowSettings();
+        settings.Translation.Enabled = true;
+        var stt = new FakeStt("olá", engineCanTranslate);
+        var formatter = new CapturingFormatter();
+        var pipeline = new DictationPipeline(
+            new FakeRecorder(1500), stt, [formatter], new FakeInjector(), new FakeApp("notepad"), () => settings);
+
+        pipeline.BeginRecording();
+        pipeline.EndRecordingAsync().GetAwaiter().GetResult();
+        return (stt, formatter);
+    }
+
+    [Fact]
+    public void Translation_uses_engine_natively_when_supported()
+    {
+        var (stt, formatter) = RunWithTranslation(engineCanTranslate: true);
+
+        Assert.True(stt.LastOptions!.TranslateToEnglish);
+        Assert.Null(stt.LastOptions!.Prompt);
+        Assert.Null(formatter.Context!.TranslateTo);
+        Assert.True(formatter.Context!.IsTranslated);
+    }
+
+    [Fact]
+    public void Translation_falls_back_to_ai_when_engine_cannot_translate()
+    {
+        var (stt, formatter) = RunWithTranslation(engineCanTranslate: false);
+
+        Assert.False(stt.LastOptions!.TranslateToEnglish);
+        Assert.Equal("English", formatter.Context!.TranslateTo);
+        Assert.True(formatter.Context!.IsTranslated);
     }
 }

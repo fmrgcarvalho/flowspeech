@@ -9,6 +9,7 @@ public sealed class FlowSettings
     public HotkeySettings Hotkey { get; set; } = new();
     public TranscriptionSettings Transcription { get; set; } = new();
     public FormattingSettings Formatting { get; set; } = new();
+    public TranslationSettings Translation { get; set; } = new();
 
     /// <summary>Substituições pessoais: "flow speech" → "FlowSpeech", "gaiao" → "Gaião".</summary>
     public Dictionary<string, string> Dictionary { get; set; } = new(StringComparer.OrdinalIgnoreCase)
@@ -91,6 +92,16 @@ public sealed class FormattingSettings
 
     /// <summary>Limpeza com IA local (opcional). Pode ser ligada/desligada no menu do ícone.</summary>
     public AiCleanupSettings Ai { get; set; } = new();
+}
+
+public sealed class TranslationSettings
+{
+    /// <summary>Falar em português (ou outra língua) e escrever em inglês. Interruptor no menu do ícone.</summary>
+    public bool Enabled { get; set; } = false;
+    /// <summary>Língua de destino. O Whisper só traduz para inglês; com o modelo de IA pode ser outra.</summary>
+    public string TargetLanguage { get; set; } = "English";
+    /// <summary>Tempo máximo da tradução pela IA antes de desistir e escrever o original.</summary>
+    public int TimeoutSeconds { get; set; } = 12;
 }
 
 public sealed class AiCleanupSettings
