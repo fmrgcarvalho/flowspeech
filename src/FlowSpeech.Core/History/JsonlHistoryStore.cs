@@ -27,8 +27,8 @@ public sealed class JsonlHistoryStore(string path) : IHistoryStore
     {
         if (!File.Exists(path)) return [];
         var lines = await File.ReadAllLinesAsync(path, ct);
-        return lines
-            .Reverse()
+        // Enumerable.Reverse explícito: em C# 14 "lines.Reverse()" resolve para o Reverse(Span) que devolve void.
+        return Enumerable.Reverse(lines)
             .Where(l => !string.IsNullOrWhiteSpace(l))
             .Take(count)
             .Select(l => JsonSerializer.Deserialize<HistoryEntry>(l)!)
