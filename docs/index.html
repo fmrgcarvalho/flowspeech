@@ -184,6 +184,14 @@
 
   footer { padding: 44px 0 64px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
   footer p { margin: 0 0 8px; max-width: 60em; }
+  .author { display: flex; align-items: center; gap: 14px; padding-bottom: 22px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .author-mark {
+    flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--ink); color: var(--bg); font: 800 15px/1 var(--display); letter-spacing: -0.02em;
+  }
+  .author p { margin: 0; }
+  .author strong { color: var(--ink); font-weight: 700; }
+  .author-links { display: inline-flex; flex-wrap: wrap; gap: 4px 16px; }
 
   @media (max-width: 920px) {
     .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 24px; }
@@ -419,6 +427,11 @@ cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
 
 <footer>
   <div class="wrap">
+    <div class="author">
+      <span class="author-mark" aria-hidden="true">FC</span>
+      <p>Made by <strong>Fábio Carvalho</strong>, Tech Lead &amp; .NET Architect.
+        <span class="author-links"><a href="https://fmrgcarvalho.github.io/" target="_blank" rel="noopener">Personal site</a><a href="https://www.linkedin.com/in/fmrgcarvalho" target="_blank" rel="noopener">LinkedIn</a></span></p>
+    </div>
     <p>SpeechDesk is open source. Code at <a href="https://github.com/fmrgcarvalho/speechdesk">github.com/fmrgcarvalho/speechdesk</a>.</p>
     <p>Third-party models: Parakeet TDT 0.6B v3 © NVIDIA (CC-BY-4.0), Whisper © OpenAI (MIT), Qwen 2.5 © Alibaba (Apache 2.0). Libraries: sherpa-onnx, whisper.cpp, llama.cpp, NAudio.</p>
   </div>

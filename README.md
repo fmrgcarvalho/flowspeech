@@ -46,6 +46,12 @@ the clock (right-click). Change the key with `Hotkey.VirtualKey` in the settings
   start sending audio (the first word gets lost) and use low-quality call audio; the laptop's built-in
   microphone or a wired/USB headset is much more accurate. By default SpeechDesk uses the Windows
   default microphone.
+- **Pin your languages** — `"Transcription": { "Languages": "pt" }` (or `"pt,en"`). Parakeet detects the
+  language by itself and short phrases sometimes come out in Spanish or English; with this set, a sentence
+  that comes out in another language is transcribed again with Whisper forced to the first language
+  (needs the Whisper model; ~1 s per second of audio, only for those sentences).
+- **The microphone stays open for 30 s after each dictation** (`MicrophoneWarmSeconds`), so the next one
+  starts instantly and includes the 250 ms before you pressed the key. Set it to `0` to close it right away.
 - **Speak in full sentences** (4 s or more). Very short phrases give the model little context.
 - Start speaking when the overlay appears. SpeechDesk keeps recording for 250 ms after you let go of
   the key (`Hotkey.ReleaseTailMs`), so the last syllable is not cut off.
@@ -71,8 +77,8 @@ By default SpeechDesk uses **NVIDIA Parakeet TDT 0.6B v3** (CC-BY-4.0), running 
 
 **OpenAI Whisper large-v3-turbo** (whisper.cpp) is available as an alternative — useful for languages
 outside those 25 — and there is an adapter for OpenAI-compatible cloud APIs, off by default.
-Whisper is much heavier on CPU: on a 4-core laptop (Intel i5-1135G7) it took ~30 s per sentence versus
-~0.5 s for Parakeet, so it is only practical on fast desktops.
+Whisper is much heavier on CPU: on a 4-core laptop (Intel i5-1135G7) it needs ~1 s per second of audio
+versus ~0.1 s for Parakeet, so SpeechDesk uses it mainly as a fallback to force the language.
 
 ## Speak Portuguese, type English (optional)
 
@@ -173,7 +179,8 @@ An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
     "ParakeetModelDir": "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
     "WhisperModelPath": "ggml-large-v3-turbo-q5_0.bin",
-    "Language": "auto"                         // Whisper/cloud only; Parakeet detects it
+    "Language": "auto",                        // Whisper/cloud only; Parakeet detects it
+    "Languages": ""                            // languages you speak, e.g. "pt" or "pt,en"; "" = any
   },
   "Formatting": {
     "RuleBasedCleanup": true,
@@ -184,6 +191,7 @@ An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
   "Snippets":   { "my email": "name@example.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
   "Microphone": "",                            // name (or part of it); "" = Windows default
+  "MicrophoneWarmSeconds": 30,                 // keep the mic open after a dictation; 0 = close at once
   "Injection": "Paste"                         // "Type" for apps that block pasting
 }
 ```
@@ -214,9 +222,10 @@ Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (in Portuguese).
 - It cannot type into apps running **as Administrator** (Windows UIPI restriction) unless SpeechDesk also runs elevated.
 - The first dictation after start-up can take 1–2 s while the model loads.
 - Parakeet does not accept a custom vocabulary; fix proper names with the personal dictionary.
-- Parakeet detects the language by itself and cannot be forced to Portuguese: very short phrases are
-  sometimes transcribed in English.
-- Bluetooth headset microphones lose the start of each dictation; choose another microphone in the tray menu.
+- Parakeet detects the language by itself; without `Transcription.Languages` very short phrases are
+  sometimes transcribed in English or Spanish.
+- Bluetooth headset microphones lose about 1 s at the start of the first dictation (the next ones are
+  fine while the microphone stays open).
 
 ## Third-party licences
 

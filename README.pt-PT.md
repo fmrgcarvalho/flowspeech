@@ -46,6 +46,12 @@ A **limpeza com IA** e a **tradução para inglês** ligam-se e desligam-se no m
   cerca de 1 s a começar a enviar áudio (perde-se a primeira palavra) e usam áudio de chamada, de baixa
   qualidade; o microfone do portátil ou um headset com fio/USB acerta muito mais. Por omissão o
   SpeechDesk usa o microfone por omissão do Windows.
+- **Fixa as tuas línguas** — `"Transcription": { "Languages": "pt" }` (ou `"pt,en"`). O Parakeet deteta a
+  língua sozinho e frases curtas saem às vezes em espanhol ou inglês; com isto definido, uma frase que saia
+  noutra língua é transcrita de novo com o Whisper forçado à primeira língua (precisa do modelo Whisper;
+  ~1 s por segundo de áudio, só nessas frases).
+- **O microfone fica aberto 30 s depois de cada ditado** (`MicrophoneWarmSeconds`): o seguinte começa logo
+  e inclui os 250 ms antes de carregares na tecla. Põe `0` para fechar de imediato.
 - **Dita frases completas** (4 s ou mais). Frases muito curtas dão pouco contexto ao modelo.
 - Começa a falar quando aparecer a barra. O SpeechDesk continua a gravar 250 ms depois de soltares a
   tecla (`Hotkey.ReleaseTailMs`), para não cortar a última sílaba.
@@ -73,8 +79,8 @@ com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 
 O **Whisper large-v3-turbo** (whisper.cpp) continua disponível como alternativa — útil para línguas fora
 das 25 suportadas — e há um adaptador para APIs cloud compatíveis com OpenAI, desligado por omissão.
-O Whisper é muito mais pesado em CPU: num portátil de 4 núcleos (Intel i5-1135G7) demorou ~30 s por
-frase, contra ~0,5 s do Parakeet — só é prático em computadores de secretária rápidos.
+O Whisper é muito mais pesado em CPU: num portátil de 4 núcleos (Intel i5-1135G7) precisa de ~1 s por
+segundo de áudio, contra ~0,1 s do Parakeet — por isso o SpeechDesk usa-o sobretudo para forçar a língua.
 
 ## Falar em português, escrever em inglês (opcional)
 
@@ -173,7 +179,8 @@ O `scripts/download-model.ps1` descarrega os modelos pela linha de comandos (`-E
     "Engine": "parakeet",                      // "parakeet" | "whisper" | "cloud"
     "ParakeetModelDir": "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
     "WhisperModelPath": "ggml-large-v3-turbo-q5_0.bin",
-    "Language": "auto"                         // só Whisper/cloud; o Parakeet deteta sozinho
+    "Language": "auto",                        // só Whisper/cloud; o Parakeet deteta sozinho
+    "Languages": ""                            // línguas que falas, ex.: "pt" ou "pt,en"; "" = qualquer
   },
   "Formatting": {
     "RuleBasedCleanup": true,
@@ -184,6 +191,7 @@ O `scripts/download-model.ps1` descarrega os modelos pela linha de comandos (`-E
   "Snippets":   { "o meu email": "nome@exemplo.pt" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
   "Microphone": "",                            // nome (ou parte); "" = microfone por omissão do Windows
+  "MicrophoneWarmSeconds": 30,                 // microfone aberto depois de um ditado; 0 = fecha logo
   "Injection": "Paste"                         // "Type" para apps que bloqueiam colar
 }
 ```
@@ -214,9 +222,10 @@ Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o SpeechDesk também corra elevado.
 - A primeira ditação após o arranque pode demorar 1–2 s enquanto o modelo carrega.
 - O Parakeet não aceita vocabulário prévio; nomes próprios corrigem-se com o dicionário pessoal.
-- O Parakeet deteta a língua sozinho e não pode ser forçado a português: frases muito curtas saem às
-  vezes em inglês.
-- Os microfones de auscultadores Bluetooth perdem o início de cada ditado; escolhe outro microfone no menu do ícone.
+- O Parakeet deteta a língua sozinho; sem `Transcription.Languages`, frases muito curtas saem às vezes em
+  inglês ou espanhol.
+- Os microfones de auscultadores Bluetooth perdem cerca de 1 s no início do primeiro ditado (os seguintes
+  ficam bem enquanto o microfone está aberto).
 
 ## Licenças de terceiros
 
