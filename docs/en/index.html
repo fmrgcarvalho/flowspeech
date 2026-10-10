@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FlowSpeech — local voice dictation for Windows</title>
+<title>SpeechDesk — local voice dictation for Windows</title>
 <meta name="description" content="Hold a key, speak, let go. Your words appear wherever the cursor is, in any Windows app. Free, open source and 100% local.">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="alternate" hreflang="pt-PT" href="https://fmrgcarvalho.github.io/flowspeech/">
+<link rel="alternate" hreflang="pt-PT" href="https://fmrgcarvalho.github.io/speechdesk/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
@@ -206,13 +206,13 @@
   <header class="top">
     <a class="brand" href="#">
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#17202B"/><rect x="6" y="12.5" width="3" height="7" rx="1.5" fill="#38BDF8"/><rect x="11" y="9.5" width="3" height="13" rx="1.5" fill="#38BDF8"/><rect x="16" y="6.5" width="3" height="19" rx="1.5" fill="#38BDF8"/><rect x="21" y="9.5" width="3" height="13" rx="1.5" fill="#38BDF8"/></svg>
-      FlowSpeech
+      SpeechDesk
     </a>
     <nav aria-label="Sections">
       <a href="#features">Features</a>
       <a href="#shortcuts">Shortcuts</a>
       <a href="#install">Install</a>
-      <a href="https://github.com/fmrgcarvalho/flowspeech">GitHub</a>
+      <a href="https://github.com/fmrgcarvalho/speechdesk">GitHub</a>
       <a href="../" hreflang="pt-PT" lang="pt-PT">Português</a>
     </nav>
   </header>
@@ -224,7 +224,7 @@
         <p class="lede">Voice dictation for Windows that runs entirely on your PC. Hold a key, speak in English or Portuguese, let go — and the text is typed into Outlook, Teams, VS Code or any other app.</p>
         <div class="cta">
           <a class="btn primary" href="#install">Install</a>
-          <a class="btn ghost" href="https://github.com/fmrgcarvalho/flowspeech">View the code</a>
+          <a class="btn ghost" href="https://github.com/fmrgcarvalho/speechdesk">View the code</a>
         </div>
         <ul class="facts">
           <li>Free and open source</li>
@@ -260,7 +260,7 @@
 
     <section id="features" aria-labelledby="f-title">
       <h2 id="f-title">Made for people who write all day</h2>
-      <p class="sub">It works in every Windows app, because FlowSpeech types wherever the cursor is — no integrations needed.</p>
+      <p class="sub">It works in every Windows app, because SpeechDesk types wherever the cursor is — no integrations needed.</p>
       <div class="features">
         <div>
           <h3>English and Portuguese</h3>
@@ -342,12 +342,12 @@
 
     <section id="install" aria-labelledby="i-title">
       <h2 id="i-title">Install</h2>
-      <p class="sub">You need Windows 10 or 11 (x64), the <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 SDK</a> and 8 GB of RAM. Without AI, FlowSpeech uses about 1 GB; with AI, about 2.5 GB.</p>
+      <p class="sub">You need Windows 10 or 11 (x64), the <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 SDK</a> and 8 GB of RAM. Without AI, SpeechDesk uses about 1 GB; with AI, about 2.5 GB.</p>
       <ol class="steps">
         <li>
           <h3>Get the code</h3>
-          <div class="code"><pre><code>git clone https://github.com/fmrgcarvalho/flowspeech.git
-cd flowspeech</code></pre><button class="copy" type="button">Copy</button></div>
+          <div class="code"><pre><code>git clone https://github.com/fmrgcarvalho/speechdesk.git
+cd speechdesk</code></pre><button class="copy" type="button">Copy</button></div>
         </li>
         <li>
           <h3>Download the speech model</h3>
@@ -357,14 +357,14 @@ cd flowspeech</code></pre><button class="copy" type="button">Copy</button></div>
         <li>
           <h3>Start it</h3>
           <p>An icon appears next to the clock. Open Notepad, hold Right Ctrl and speak.</p>
-          <div class="code"><pre><code>dotnet run --project src/FlowSpeech.App</code></pre><button class="copy" type="button">Copy</button></div>
+          <div class="code"><pre><code>dotnet run --project src/SpeechDesk.App</code></pre><button class="copy" type="button">Copy</button></div>
         </li>
       </ol>
     </section>
 
     <section id="status" aria-labelledby="e-title">
       <h2 id="e-title">Project status</h2>
-      <p class="sub">FlowSpeech is in active development (version 0.1). There is no installer yet — you build it from source.</p>
+      <p class="sub">SpeechDesk is in active development (version 0.1). There is no installer yet — you build it from source.</p>
       <div class="status">
         <div>
           <h3>Available</h3>
@@ -393,7 +393,7 @@ cd flowspeech</code></pre><button class="copy" type="button">Copy</button></div>
 
 <footer>
   <div class="wrap">
-    <p>FlowSpeech is open source. Code at <a href="https://github.com/fmrgcarvalho/flowspeech">github.com/fmrgcarvalho/flowspeech</a>.</p>
+    <p>SpeechDesk is open source. Code at <a href="https://github.com/fmrgcarvalho/speechdesk">github.com/fmrgcarvalho/speechdesk</a>.</p>
     <p>Third-party models: Parakeet TDT 0.6B v3 © NVIDIA (CC-BY-4.0), Whisper © OpenAI (MIT), Qwen 2.5 © Alibaba (Apache 2.0). Libraries: sherpa-onnx, whisper.cpp, llama.cpp, NAudio.</p>
   </div>
 </footer>

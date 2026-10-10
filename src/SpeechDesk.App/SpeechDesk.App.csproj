@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>SpeechDesk.App</RootNamespace>
+    <AssemblyName>SpeechDesk</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <!-- Só para o NotifyIcon (ícone na barra de tarefas). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\speechdesk.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Evita ambiguidades WPF vs WinForms (Application, MessageBox, ...). -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpeechDesk.Core\SpeechDesk.Core.csproj" />
+    <ProjectReference Include="..\SpeechDesk.Platform.Windows\SpeechDesk.Platform.Windows.csproj" />
+    <ProjectReference Include="..\SpeechDesk.Transcription\SpeechDesk.Transcription.csproj" />
+    <ProjectReference Include="..\SpeechDesk.AiCleanup\SpeechDesk.AiCleanup.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\speechdesk.ico" />
+    <None Update="Assets\speechdesk.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Os projetos WPF não importam System.IO nem System.Net.Http por omissão. -->
+    <Using Include="System.IO" />
+    <Using Include="System.Net.Http" />
+  </ItemGroup>
+</Project>

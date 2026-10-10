@@ -1,18 +1,18 @@
-# FlowSpeech
+# SpeechDesk
 
 [English](README.md) · **Português**
 
-[![build](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml/badge.svg)](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml)
+[![build](https://github.com/fmrgcarvalho/speechdesk/actions/workflows/build.yml/badge.svg)](https://github.com/fmrgcarvalho/speechdesk/actions/workflows/build.yml)
 
 Ditado por voz para Windows, **100% local e gratuito**.
 Mantém uma tecla premida, fala, larga: o texto aparece onde está o cursor, em qualquer aplicação
 (Outlook, Teams, Slack, VS Code, browser…). Nenhum áudio sai da máquina.
 
-**Página do projeto, com demonstração interativa:** https://fmrgcarvalho.github.io/flowspeech/ ([versão em inglês](https://fmrgcarvalho.github.io/flowspeech/en/))
+**Página do projeto, com demonstração interativa:** https://fmrgcarvalho.github.io/speechdesk/ ([versão em inglês](https://fmrgcarvalho.github.io/speechdesk/en/))
 
 > **Estado: em desenvolvimento (v0.1).** Ainda não há instalador — compila-se a partir do código.
 > O núcleo tem testes automáticos; a parte Windows e os motores de IA estão implementados e a ser
-> validados em máquinas reais. Problemas e sugestões: [Issues](https://github.com/fmrgcarvalho/flowspeech/issues).
+> validados em máquinas reais. Problemas e sugestões: [Issues](https://github.com/fmrgcarvalho/speechdesk/issues).
 
 ## Atalhos
 
@@ -40,7 +40,7 @@ O que acontece por baixo:
 
 ## Motor de transcrição
 
-Por omissão o FlowSpeech usa o **NVIDIA Parakeet TDT 0.6B v3** (licença CC-BY-4.0), executado localmente
+Por omissão o SpeechDesk usa o **NVIDIA Parakeet TDT 0.6B v3** (licença CC-BY-4.0), executado localmente
 com [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 
 - 25 línguas europeias, incluindo **português (treinado com português europeu)** e inglês
@@ -78,7 +78,7 @@ Podes escolher entre dois modos, no menu do ícone → **Limpar texto com IA**:
 O modelo é o **Qwen 2.5 1.5B Instruct** (GGUF Q4_K_M, ~1 GB, licença Apache 2.0), a correr dentro da própria
 app com llama.cpp — sem servidor nem instalações extra. Salvaguardas: se o modelo demorar mais do que
 `TimeoutSeconds`, faltar, ou devolver algo que não pareça uma limpeza (ex.: responder a uma pergunta ditada),
-o FlowSpeech escreve o texto sem IA. A ditação nunca fica bloqueada.
+o SpeechDesk escreve o texto sem IA. A ditação nunca fica bloqueada.
 
 ```powershell
 ./scripts/download-model.ps1 -Engine ai     # uma vez
@@ -112,7 +112,7 @@ Detalhe em [docs/ROADMAP.md](docs/ROADMAP.md).
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (para compilar)
 - Disco: ~0,7 GB para o modelo de transcrição (+1 GB para a limpeza com IA / tradução)
 
-| Configuração | RAM usada pelo FlowSpeech (estimativa) | RAM do PC recomendada |
+| Configuração | RAM usada pelo SpeechDesk (estimativa) | RAM do PC recomendada |
 |---|---|---|
 | Só transcrição (Parakeet ou Whisper) | ~1–1,2 GB | 8 GB (funciona com 4 GB) |
 | Transcrição + limpeza com IA ou tradução | ~2,3–2,6 GB | 8 GB (mínimo ~6 GB) |
@@ -122,21 +122,21 @@ O modelo de IA só é carregado quando ligas a limpeza com IA ou a tradução.
 ## Arranque rápido
 
 ```powershell
-git clone https://github.com/fmrgcarvalho/flowspeech.git
-cd flowspeech
+git clone https://github.com/fmrgcarvalho/speechdesk.git
+cd speechdesk
 
 # 1. Descarregar o modelo Parakeet (~0,7 GB, uma vez)
 ./scripts/download-model.ps1
 
 # 2. Correr
-dotnet run --project src/FlowSpeech.App
+dotnet run --project src/SpeechDesk.App
 ```
 
 Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl** premido e fala.
 
 ## Configuração
 
-`%AppData%\FlowSpeech\settings.json` (criado no 1.º arranque; menu do ícone → *Abrir definições* / *Recarregar definições*):
+`%AppData%\SpeechDesk\settings.json` (criado no 1.º arranque; menu do ícone → *Abrir definições* / *Recarregar definições*):
 
 ```jsonc
 {
@@ -152,7 +152,7 @@ Aparece um ícone junto ao relógio. Abre o Bloco de Notas, mantém **Right Ctrl
     "Ai": { "Enabled": false, "ModelPath": "qwen2.5-1.5b-instruct-q4_k_m.gguf", "TimeoutSeconds": 6, "GpuLayers": 0 }
   },
   "Translation": { "Enabled": false, "TargetLanguage": "English", "TimeoutSeconds": 12 },
-  "Dictionary": { "flow speech": "FlowSpeech", "dot net": ".NET" },
+  "Dictionary": { "speech desk": "SpeechDesk", "dot net": ".NET" },
   "Snippets":   { "o meu email": "nome@exemplo.pt" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
   "Injection": "Paste"                         // "Type" para apps que bloqueiam colar
@@ -164,14 +164,14 @@ Para usar o Whisper: `./scripts/download-model.ps1 -Engine whisper` e `"Engine":
 ## Estrutura
 
 ```
-flowspeech/
+speechdesk/
 ├── src/
-│   ├── FlowSpeech.Core/               # Domínio puro (net8.0): abstrações, pipeline, regras de texto, definições
-│   ├── FlowSpeech.Transcription/      # Motores: Parakeet (omissão), Whisper, API cloud
-│   ├── FlowSpeech.AiCleanup/          # Limpeza opcional com modelo de linguagem local (LLamaSharp)
-│   ├── FlowSpeech.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
-│   └── FlowSpeech.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
-├── tests/FlowSpeech.Core.Tests/       # Testes unitários do domínio (xUnit)
+│   ├── SpeechDesk.Core/               # Domínio puro (net8.0): abstrações, pipeline, regras de texto, definições
+│   ├── SpeechDesk.Transcription/      # Motores: Parakeet (omissão), Whisper, API cloud
+│   ├── SpeechDesk.AiCleanup/          # Limpeza opcional com modelo de linguagem local (LLamaSharp)
+│   ├── SpeechDesk.Platform.Windows/   # Win32: hook de teclado, microfone, inserção de texto, app ativa
+│   └── SpeechDesk.App/                # WPF: composition root, ícone na tray, overlay, controlador do atalho
+├── tests/SpeechDesk.Core.Tests/       # Testes unitários do domínio (xUnit)
 ├── scripts/download-model.ps1
 ├── docs/                              # Página do projeto (PT em /, EN em /en), arquitetura, roadmap e ADRs
 └── .github/workflows/build.yml        # CI em windows-latest: build, testes e publish
@@ -181,7 +181,7 @@ Arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Limitações conhecidas
 
-- Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o FlowSpeech também corra elevado.
+- Não escreve em apps a correr **como Administrador** (restrição UIPI do Windows) a não ser que o SpeechDesk também corra elevado.
 - A primeira ditação após o arranque pode demorar 1–2 s enquanto o modelo carrega.
 - O Parakeet não aceita vocabulário prévio; nomes próprios corrigem-se com o dicionário pessoal.
 

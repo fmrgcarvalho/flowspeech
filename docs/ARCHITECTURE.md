@@ -3,7 +3,7 @@
 ## Princípios
 
 1. **Local primeiro.** O caminho por omissão não faz chamadas de rede. Cloud é um adaptador opcional.
-2. **O núcleo não conhece o Windows.** `FlowSpeech.Core` é `net8.0` puro e testável em qualquer SO.
+2. **O núcleo não conhece o Windows.** `SpeechDesk.Core` é `net8.0` puro e testável em qualquer SO.
    Tudo o que toca Win32, áudio ou motores de transcrição vive atrás de interfaces.
 3. **A ditação nunca bloqueia.** Etapas opcionais (limpeza com IA, histórico) degradam graciosamente:
    se falharem, o texto segue sem elas.
@@ -13,14 +13,14 @@
 ## Dependências entre projetos
 
 ```
-             FlowSpeech.App (WPF, composition root)
+             SpeechDesk.App (WPF, composition root)
             /              |              |          \
  Platform.Windows    Transcription    AiCleanup       │
             \              |              |          /
-               FlowSpeech.Core (abstrações + domínio)
+               SpeechDesk.Core (abstrações + domínio)
 ```
 
-## Abstrações (`FlowSpeech.Core.Abstractions`)
+## Abstrações (`SpeechDesk.Core.Abstractions`)
 
 | Interface | Implementação atual | Alternativas |
 |---|---|---|

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Descarrega o modelo de transcrição para %AppData%\FlowSpeech\models.
+  Descarrega o modelo de transcrição para %AppData%\SpeechDesk\models.
 
 .EXAMPLE
   ./scripts/download-model.ps1                   # Parakeet TDT 0.6B v3 int8 (por omissão, ~0,7 GB)
@@ -15,7 +15,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"   # acelera muito o Invoke-WebRequest
 
-$dir = Join-Path $env:APPDATA "FlowSpeech\models"
+$dir = Join-Path $env:APPDATA "SpeechDesk\models"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 
 if ($Engine -eq "parakeet") {
@@ -55,7 +55,7 @@ elseif ($Engine -eq "ai") {
     }
 
     Write-Host ""
-    Write-Host 'Liga a opção "Limpar texto com IA" no menu do ícone do FlowSpeech.'
+    Write-Host 'Liga a opção "Limpar texto com IA" no menu do ícone do SpeechDesk.'
 }
 else {
     $file = "ggml-large-v3-turbo-q5_0.bin"
@@ -71,5 +71,5 @@ else {
     }
 
     Write-Host ""
-    Write-Host 'Para usar o Whisper, em %AppData%\FlowSpeech\settings.json define "Engine": "whisper".'
+    Write-Host 'Para usar o Whisper, em %AppData%\SpeechDesk\settings.json define "Engine": "whisper".'
 }

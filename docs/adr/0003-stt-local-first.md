@@ -3,7 +3,7 @@
 **Estado:** aceite · **Data:** 2026-10-10
 
 ## Contexto
-O FlowSpeech tem de transcrever localmente (privacidade, custo zero, offline), com qualidade em
+O SpeechDesk tem de transcrever localmente (privacidade, custo zero, offline), com qualidade em
 português europeu e inglês e latência baixa em CPU comum. Sem dependência de LLMs externos.
 
 ## Opções

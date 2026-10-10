@@ -16,18 +16,18 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore FlowSpeech.sln
+        run: dotnet restore SpeechDesk.sln
 
       - name: Build
-        run: dotnet build FlowSpeech.sln -c Release --no-restore
+        run: dotnet build SpeechDesk.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test tests/FlowSpeech.Core.Tests -c Release --no-build --logger "console;verbosity=normal"
+        run: dotnet test tests/SpeechDesk.Core.Tests -c Release --no-build --logger "console;verbosity=normal"
 
       - name: Publish app
-        run: dotnet publish src/FlowSpeech.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish
+        run: dotnet publish src/SpeechDesk.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish
 
       - uses: actions/upload-artifact@v4
         with:
-          name: FlowSpeech-win-x64
+          name: SpeechDesk-win-x64
           path: publish

@@ -1,0 +1,173 @@
+using System.IO;
+using System.Net.Http;
+using System.Windows;
+using System.Windows.Threading;
+using SpeechDesk.AiCleanup;
+using SpeechDesk.Core.Abstractions;
+using SpeechDesk.Core.History;
+using SpeechDesk.Core.Pipeline;
+using SpeechDesk.Core.Settings;
+using SpeechDesk.Core.Text;
+using SpeechDesk.Platform.Windows;
+using SpeechDesk.Transcription;
+
+namespace SpeechDesk.App;
+
+/// <summary>Composition root: liga as peças e arranca em segundo plano (só ícone na barra de tarefas).</summary>
+public partial class App : Application
+{
+    private Mutex? _singleInstance;
+    private FlowSettings _settings = new();
+    private TrayIcon? _tray;
+    private LocalAiFormatter? _ai;
+    private ISpeechToText? _stt;
+
+    /// <summary>A tradução só precisa do modelo de IA quando o motor não traduz sozinho (ex.: Parakeet).</summary>
+    private bool TranslationNeedsAi => _settings.Translation.Enabled && _stt?.CanTranslateToEnglish != true;
+    private OverlayWindow? _overlay;
+    private DictationController? _controller;
+    private readonly List<IDisposable> _disposables = [];
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        _singleInstance = new Mutex(true, @"Local\SpeechDesk.SingleInstance", out var isFirst);
+        if (!isFirst)
+        {
+            MessageBox.Show("O SpeechDesk já está a correr (ícone junto ao relógio).", "SpeechDesk");
+            Shutdown();
+            return;
+        }
+
+        if (SynchronizationContext.Current is null)
+            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher));
+
+        DispatcherUnhandledException += (_, args) =>
+        {
+            _tray?.ShowError(args.Exception.Message);
+            args.Handled = true;
+        };
+
+        _settings = SettingsStore.Load();
+        Func<FlowSettings> settings = () => _settings;
+
+        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+        var stt = CreateSpeechToText(_settings, http);
+
+        // IA (opcional) primeiro, regras depois: o dicionário e os snippets têm sempre a última palavra.
+        _ai = new LocalAiFormatter(settings);
+        _ai.LoadFailed += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
+        _ai.Warning += (_, message) => Dispatcher.BeginInvoke(() => _tray?.ShowError(message));
+        _disposables.Add(_ai);
+        var formatters = new List<ITextFormatter> { _ai, new RuleBasedFormatter(settings) };
+
+        var recorder = new NAudioRecorder();
+        var hotkey = new LowLevelHotkeyListener(() => _settings.Hotkey.VirtualKey, () => _settings.Hotkey.DoubleTapMs);
+        _disposables.AddRange([recorder, hotkey]);
+
+        var pipeline = new DictationPipeline(
+            recorder,
+            stt,
+            formatters,
+            new ClipboardTextInjector(Dispatcher, () => _settings.Injection),
+            new ForegroundAppProvider(),
+            settings,
+            new JsonlHistoryStore(Path.Combine(SettingsStore.AppDataDir, "history.jsonl")));
+
+        _overlay = new OverlayWindow { TranslationOn = _settings.Translation.Enabled };
+        recorder.LevelChanged += (_, level) => Dispatcher.BeginInvoke(() => _overlay.SetLevel(level));
+
+        _stt = stt;
+        _tray = new TrayIcon(ReloadSettings, () => Shutdown(),
+            () => _settings.Formatting.Ai.Enabled, SetAiEnabled,
+            () => _settings.Translation.Enabled, SetTranslationEnabled);
+        _controller = new DictationController(pipeline, hotkey, _overlay, _tray);
+
+        hotkey.Start();
+        _ = _ai.WarmUpAsync(force: TranslationNeedsAi);
+        _tray.ShowInfo("SpeechDesk pronto. Mantém Right Ctrl premido para ditar; dois toques = mãos-livres.");
+    }
+
+    private ISpeechToText CreateSpeechToText(FlowSettings s, HttpClient http)
+    {
+        var t = s.Transcription;
+        switch (t.Engine.ToLowerInvariant())
+        {
+            case TranscriptionEngines.Cloud:
+                return new CloudSpeechToText(http, t.Cloud);
+
+            case TranscriptionEngines.Whisper:
+                var whisper = new WhisperLocalSpeechToText(SettingsStore.ResolveModelPath(t.WhisperModelPath), t.Threads);
+                _disposables.Add(whisper);
+                WarmUp(whisper.WarmUpAsync());
+                return whisper;
+
+            default:
+                var parakeet = new ParakeetSpeechToText(SettingsStore.ResolveModelPath(t.ParakeetModelDir), t.Threads);
+                _disposables.Add(parakeet);
+                WarmUp(parakeet.WarmUpAsync());
+                return parakeet;
+        }
+    }
+
+    /// <summary>Carrega o modelo em background; se faltar, avisa logo em vez de na 1.ª ditação.</summary>
+    private void WarmUp(Task warmUp) =>
+        warmUp.ContinueWith(
+            t => Dispatcher.BeginInvoke(() => _tray?.ShowError(t.Exception!.GetBaseException().Message)),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+    private void SetAiEnabled(bool enabled)
+    {
+        _settings.Formatting.Ai.Enabled = enabled;
+        SettingsStore.Save(_settings);
+        if (enabled)
+        {
+            _tray?.ShowInfo("Limpeza com IA ligada. A carregar o modelo…");
+            _ = _ai?.WarmUpAsync();
+        }
+        else
+        {
+            _tray?.ShowInfo("Limpeza com IA desligada — só regras.");
+        }
+    }
+
+    private void SetTranslationEnabled(bool enabled)
+    {
+        _settings.Translation.Enabled = enabled;
+        SettingsStore.Save(_settings);
+        if (_overlay is not null) _overlay.TranslationOn = enabled;
+
+        if (!enabled)
+        {
+            _tray?.ShowInfo("Tradução desligada — o texto sai na língua em que falas.");
+        }
+        else if (TranslationNeedsAi)
+        {
+            _tray?.ShowInfo($"Tradução para {_settings.Translation.TargetLanguage} ligada. A carregar o modelo de IA…");
+            _ = _ai?.WarmUpAsync(force: true);
+        }
+        else
+        {
+            _tray?.ShowInfo("Tradução para inglês ligada (feita pelo Whisper).");
+        }
+    }
+
+    private void ReloadSettings()
+    {
+        _settings = SettingsStore.Load();
+        _tray?.SyncToggles();
+        if (_overlay is not null) _overlay.TranslationOn = _settings.Translation.Enabled;
+        _ = _ai?.WarmUpAsync(force: TranslationNeedsAi);
+        _tray?.ShowInfo("Definições recarregadas. (Mudar o motor ou o modelo requer reiniciar.)");
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _controller?.Dispose();
+        foreach (var d in _disposables) d.Dispose();
+        _tray?.Dispose();
+        _singleInstance?.Dispose();
+        base.OnExit(e);
+    }
+}

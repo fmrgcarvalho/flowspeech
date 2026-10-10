@@ -1,18 +1,18 @@
-# FlowSpeech
+# SpeechDesk
 
 **English** · [Português](README.pt-PT.md)
 
-[![build](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml/badge.svg)](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml)
+[![build](https://github.com/fmrgcarvalho/speechdesk/actions/workflows/build.yml/badge.svg)](https://github.com/fmrgcarvalho/speechdesk/actions/workflows/build.yml)
 
 Voice dictation for Windows, **100% local and free**.
 Hold a key, speak, let go: the text appears wherever the cursor is, in any application
 (Outlook, Teams, Slack, VS Code, your browser…). No audio ever leaves your machine.
 
-**Project page with an interactive demo:** https://fmrgcarvalho.github.io/flowspeech/en/
+**Project page with an interactive demo:** https://fmrgcarvalho.github.io/speechdesk/en/
 
 > **Status: in development (v0.1).** There is no installer yet — you build it from source.
 > The core has automated tests and CI builds the full Windows app; real-world testing on different
-> machines is ongoing. Bugs and ideas: [Issues](https://github.com/fmrgcarvalho/flowspeech/issues).
+> machines is ongoing. Bugs and ideas: [Issues](https://github.com/fmrgcarvalho/speechdesk/issues).
 
 ## Shortcuts
 
@@ -38,7 +38,7 @@ the clock (right-click). Change the key with `Hotkey.VirtualKey` in the settings
 
 ## Speech recognition engine
 
-By default FlowSpeech uses **NVIDIA Parakeet TDT 0.6B v3** (CC-BY-4.0), running locally with
+By default SpeechDesk uses **NVIDIA Parakeet TDT 0.6B v3** (CC-BY-4.0), running locally with
 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx):
 
 - 25 European languages, including **English and Portuguese** (trained on European Portuguese)
@@ -78,7 +78,7 @@ Two modes, from the tray menu → **Clean up text with AI**:
 The model is **Qwen 2.5 1.5B Instruct** (GGUF Q4_K_M, ~1 GB, Apache 2.0), running inside the app with
 llama.cpp — no server, nothing else to install. Safeguards: if the model is slower than `TimeoutSeconds`,
 missing, or returns something that does not look like a clean-up (e.g. it answers a question you
-dictated), FlowSpeech types the text without AI. Dictation never gets stuck.
+dictated), SpeechDesk types the text without AI. Dictation never gets stuck.
 
 ```powershell
 ./scripts/download-model.ps1 -Engine ai     # once
@@ -112,7 +112,7 @@ Details in [docs/ROADMAP.md](docs/ROADMAP.md) (in Portuguese).
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (to build)
 - Disk: ~0.7 GB for the speech model (+1 GB for AI clean-up / translation)
 
-| Setup | RAM used by FlowSpeech (estimate) | Recommended PC RAM |
+| Setup | RAM used by SpeechDesk (estimate) | Recommended PC RAM |
 |---|---|---|
 | Speech recognition only (Parakeet or Whisper) | ~1–1.2 GB | 8 GB (works with 4 GB) |
 | Speech recognition + AI clean-up or translation | ~2.3–2.6 GB | 8 GB (minimum ~6 GB) |
@@ -122,25 +122,25 @@ The AI model is only loaded when you turn on AI clean-up or translation.
 ## Quick start
 
 ```powershell
-git clone https://github.com/fmrgcarvalho/flowspeech.git
-cd flowspeech
+git clone https://github.com/fmrgcarvalho/speechdesk.git
+cd speechdesk
 
 # 1. Download the Parakeet model (~0.7 GB, once)
 ./scripts/download-model.ps1
 
 # 2. Run
-dotnet run --project src/FlowSpeech.App
+dotnet run --project src/SpeechDesk.App
 ```
 
 An icon appears next to the clock. Open Notepad, hold **Right Ctrl** and speak.
 
 Every push to `main` also produces a ready-to-run build: open the latest successful run under
-[Actions](https://github.com/fmrgcarvalho/flowspeech/actions/workflows/build.yml) and download the
-`FlowSpeech-win-x64` artifact (you still need to download the model with the script).
+[Actions](https://github.com/fmrgcarvalho/speechdesk/actions/workflows/build.yml) and download the
+`SpeechDesk-win-x64` artifact (you still need to download the model with the script).
 
 ## Configuration
 
-`%AppData%\FlowSpeech\settings.json` (created on first run; tray menu → *Open settings* / *Reload settings*):
+`%AppData%\SpeechDesk\settings.json` (created on first run; tray menu → *Open settings* / *Reload settings*):
 
 ```jsonc
 {
@@ -156,7 +156,7 @@ Every push to `main` also produces a ready-to-run build: open the latest success
     "Ai": { "Enabled": false, "ModelPath": "qwen2.5-1.5b-instruct-q4_k_m.gguf", "TimeoutSeconds": 6, "GpuLayers": 0 }
   },
   "Translation": { "Enabled": false, "TargetLanguage": "English", "TimeoutSeconds": 12 },
-  "Dictionary": { "flow speech": "FlowSpeech", "dot net": ".NET" },
+  "Dictionary": { "speech desk": "SpeechDesk", "dot net": ".NET" },
   "Snippets":   { "my email": "name@example.com" },
   "AppStyles":  { "OUTLOOK": "Formal", "slack": "Casual", "Code": "Code" },
   "Injection": "Paste"                         // "Type" for apps that block pasting
@@ -168,14 +168,14 @@ To use Whisper: `./scripts/download-model.ps1 -Engine whisper` and `"Engine": "w
 ## Project structure
 
 ```
-flowspeech/
+speechdesk/
 ├── src/
-│   ├── FlowSpeech.Core/               # Pure domain (net8.0): abstractions, pipeline, text rules, settings
-│   ├── FlowSpeech.Transcription/      # Engines: Parakeet (default), Whisper, cloud API
-│   ├── FlowSpeech.AiCleanup/          # Optional clean-up/translation with a local language model (LLamaSharp)
-│   ├── FlowSpeech.Platform.Windows/   # Win32: keyboard hook, microphone, text insertion, active app
-│   └── FlowSpeech.App/                # WPF: composition root, tray icon, overlay, hotkey controller
-├── tests/FlowSpeech.Core.Tests/       # Domain unit tests (xUnit)
+│   ├── SpeechDesk.Core/               # Pure domain (net8.0): abstractions, pipeline, text rules, settings
+│   ├── SpeechDesk.Transcription/      # Engines: Parakeet (default), Whisper, cloud API
+│   ├── SpeechDesk.AiCleanup/          # Optional clean-up/translation with a local language model (LLamaSharp)
+│   ├── SpeechDesk.Platform.Windows/   # Win32: keyboard hook, microphone, text insertion, active app
+│   └── SpeechDesk.App/                # WPF: composition root, tray icon, overlay, hotkey controller
+├── tests/SpeechDesk.Core.Tests/       # Domain unit tests (xUnit)
 ├── scripts/download-model.ps1
 ├── docs/                              # Project page (PT at /, EN at /en), architecture, roadmap and ADRs
 └── .github/workflows/build.yml        # CI on windows-latest: build, tests and publish
@@ -185,7 +185,7 @@ Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (in Portuguese).
 
 ## Known limitations
 
-- It cannot type into apps running **as Administrator** (Windows UIPI restriction) unless FlowSpeech also runs elevated.
+- It cannot type into apps running **as Administrator** (Windows UIPI restriction) unless SpeechDesk also runs elevated.
 - The first dictation after start-up can take 1–2 s while the model loads.
 - Parakeet does not accept a custom vocabulary; fix proper names with the personal dictionary.
 

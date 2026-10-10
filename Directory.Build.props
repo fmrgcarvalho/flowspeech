@@ -7,7 +7,7 @@
     <!-- Permite compilar os projetos Windows também em Linux/macOS (CI, devcontainers). -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Company>fmrgcarvalho</Company>
-    <Product>FlowSpeech</Product>
+    <Product>SpeechDesk</Product>
     <Version>0.1.0</Version>
   </PropertyGroup>
 </Project>

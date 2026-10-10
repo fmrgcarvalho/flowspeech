@@ -15,7 +15,7 @@ resolvem auto-correções ("às 3, não, às 4"), gramática nem tom. O utilizad
 | ONNX Runtime GenAI | Integração Microsoft | Menos modelos prontos; conversão necessária |
 
 ## Decisão
-- `LocalAiFormatter` (projeto `FlowSpeech.AiCleanup`) com LLamaSharp e **Qwen 2.5 1.5B Instruct Q4_K_M**
+- `LocalAiFormatter` (projeto `SpeechDesk.AiCleanup`) com LLamaSharp e **Qwen 2.5 1.5B Instruct Q4_K_M**
   (Apache 2.0, bom em PT e EN, rápido em CPU).
 - **Desligado por omissão**; interruptor "Limpar texto com IA" no menu do ícone, guardado em `settings.json`.
 - Corre **antes** das regras, para o dicionário e os snippets terem sempre a última palavra.
