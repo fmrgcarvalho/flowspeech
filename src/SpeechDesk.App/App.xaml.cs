@@ -22,6 +22,9 @@ public partial class App : Application
     private TrayIcon? _tray;
     private LocalAiFormatter? _ai;
     private ISpeechToText? _stt;
+    private ParakeetSpeechToText? _parakeet;
+    private WhisperLocalSpeechToText? _languageFallback;
+    private readonly object _fallbackLock = new();
     private OverlayWindow? _overlay;
     private DictationController? _controller;
     private ModelDownloader? _downloader;
@@ -70,7 +73,7 @@ public partial class App : Application
         _disposables.Add(_ai);
         var formatters = new List<ITextFormatter> { _ai, new RuleBasedFormatter(settings) };
 
-        var recorder = new NAudioRecorder(() => _settings.Microphone);
+        var recorder = new NAudioRecorder(() => _settings.Microphone, () => _settings.MicrophoneWarmSeconds);
         var hotkey = new LowLevelHotkeyListener(() => _settings.Hotkey.VirtualKey, () => _settings.Hotkey.DoubleTapMs);
         _disposables.AddRange([recorder, hotkey]);
 
@@ -120,9 +123,27 @@ public partial class App : Application
                 return whisper;
 
             default:
-                var parakeet = new ParakeetSpeechToText(SettingsStore.ResolveModelPath(t.ParakeetModelDir), t.Threads);
-                _disposables.Add(parakeet);
-                return parakeet;
+                _parakeet = new ParakeetSpeechToText(SettingsStore.ResolveModelPath(t.ParakeetModelDir), t.Threads);
+                _disposables.Add(_parakeet);
+                return new LanguageGuardSpeechToText(_parakeet, LanguageFallback, () => _settings);
+        }
+    }
+
+    private bool LanguagesPinned => !string.IsNullOrWhiteSpace(_settings.Transcription.Languages);
+
+    /// <summary>Whisper para repetir frases que o Parakeet escreveu na língua errada; null sem o modelo.</summary>
+    private ISpeechToText? LanguageFallback()
+    {
+        if (!ModelCatalog.Whisper.IsInstalled(_settings)) return null;
+        lock (_fallbackLock)
+        {
+            if (_languageFallback is null)
+            {
+                var t = _settings.Transcription;
+                _languageFallback = new WhisperLocalSpeechToText(SettingsStore.ResolveModelPath(t.WhisperModelPath), t.Threads);
+                _disposables.Add(_languageFallback);
+            }
+            return _languageFallback;
         }
     }
 
@@ -137,6 +158,9 @@ public partial class App : Application
         var speech = ModelCatalog.SpeechModelFor(_settings);
         if (speech is not null && !await EnsureInstalledAsync(speech, askFirst)) return;
         WarmUpSpeech();
+
+        if (_parakeet is not null && LanguagesPinned && await EnsureInstalledAsync(ModelCatalog.Whisper, askFirst))
+            _ = (LanguageFallback() as WhisperLocalSpeechToText)?.WarmUpAsync();
 
         if (AiModelNeeded && await EnsureInstalledAsync(ModelCatalog.Ai, askFirst))
             _ = _ai?.WarmUpAsync(force: true);
@@ -181,9 +205,8 @@ public partial class App : Application
     {
         var warmUp = _stt switch
         {
-            ParakeetSpeechToText p => p.WarmUpAsync(),
             WhisperLocalSpeechToText w => w.WarmUpAsync(),
-            _ => Task.CompletedTask
+            _ => _parakeet?.WarmUpAsync() ?? Task.CompletedTask
         };
         warmUp.ContinueWith(
             t => Dispatcher.BeginInvoke(() => _tray?.ShowError(t.Exception!.GetBaseException().Message)),

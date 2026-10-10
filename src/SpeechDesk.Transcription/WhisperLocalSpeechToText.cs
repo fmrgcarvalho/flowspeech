@@ -54,6 +54,11 @@ public sealed class WhisperLocalSpeechToText : ISpeechToText, IDisposable
         if (options.TranslateToEnglish)
             builder = builder.WithTranslate();
 
+        // O Whisper processa sempre uma janela de 30 s (1500 posições). Numa frase curta, limitar a janela
+        // à duração real torna-o ~8x mais rápido em CPU. A margem evita cortar a última palavra.
+        if (clip.Duration.TotalSeconds < 25)
+            builder = builder.WithAudioContextSize((int)Math.Ceiling(clip.Duration.TotalSeconds / 30 * 1500) + 64);
+
         await using var processor = builder.Build();
         using var wav = new MemoryStream(WavEncoder.ToWav(clip));
 

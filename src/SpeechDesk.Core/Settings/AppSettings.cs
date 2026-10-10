@@ -48,6 +48,12 @@ public sealed class AppSettings
     /// </summary>
     public string Microphone { get; set; } = "";
 
+    /// <summary>
+    /// Segundos que o microfone fica aberto depois de um ditado: o seguinte começa sem atraso e apanha
+    /// o início da frase. 0 = fecha logo (o ícone de microfone do Windows desaparece mais cedo).
+    /// </summary>
+    public int MicrophoneWarmSeconds { get; set; } = 30;
+
     public InjectionMode Injection { get; set; } = InjectionMode.Paste;
     public bool SaveHistory { get; set; } = true;
 
@@ -77,6 +83,12 @@ public sealed class TranscriptionSettings
     public string WhisperModelPath { get; set; } = "ggml-large-v3-turbo-q5_0.bin";
     /// <summary>Só Whisper/cloud: "auto", "pt", "en". O Parakeet deteta a língua sozinho.</summary>
     public string Language { get; set; } = "auto";
+    /// <summary>
+    /// Línguas que falas, separadas por vírgula ("pt" ou "pt,en"). Vazio = qualquer uma.
+    /// Se o Parakeet escrever noutra língua, a frase é repetida com o Whisper forçado à primeira
+    /// (precisa do modelo Whisper; ~1 s por segundo de áudio, só nesses casos).
+    /// </summary>
+    public string Languages { get; set; } = "";
     public int Threads { get; set; } = 0; // 0 = automático
     public CloudSettings Cloud { get; set; } = new();
 }
